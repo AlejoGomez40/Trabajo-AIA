@@ -291,7 +291,61 @@ def prop_y(y):
 
 # Los árboles de decisión están formados por nodos. Usar la siguiente clase para la
 # implementación de los nodos:
-    
+
+# --------------------
+# Funciones Auxiliares
+# --------------------
+
+# Calcula las proporciones de cada clasificacion
+def prop_y(y):
+    _, conteos = np.unique(y, return_counts=True)
+    probabilidades = conteos / y.size
+    return probabilidades
+
+# Calcula la aleatoridad de datos en un nodo
+def entropia(y):
+    if y.size == 0:
+        return 0.0
+    probabilidades = prop_y(y) # Usamos la funcion anterior para obtener las probabilidades
+    return -np.sum(probabilidades * np.log2(probabilidades)) # Fórmula de entropía sobre el array
+
+# Calcula la ganancia de informacion al dividir los datos
+def ganancia_informacion(y_padre, y_izq, y_der):
+    peso_izq = y_izq.size / y_padre.size
+    peso_der = y_der.size / y_padre.size
+    entropia_hijos = (peso_izq * entropia(y_izq)) + (peso_der * entropia(y_der))
+    return entropia(y_padre) - entropia_hijos
+
+# --------------------
+# Pruebas
+# --------------------
+
+print("--- 1. PROBANDO LA ENTROPÍA (El caos) ---")
+
+y_puro = np.array([0, 0, 0, 0])
+print(f"Entropía grupo puro (todo 0s): {entropia(y_puro)}") 
+
+y_empate = np.array([1, 1, 0, 0])
+print(f"Entropía grupo empatado (mitad y mitad): {entropia(y_empate)}")
+
+
+print("\n--- 2. PROBANDO LA GANANCIA (El beneficio de dividir) ---")
+
+y_padre = np.array([1, 1, 1, 0, 0, 0])
+y_izq_bueno = np.array([1, 1, 1])
+y_der_bueno = np.array([0, 0, 0])
+ganancia_buena = ganancia_informacion(y_padre, y_izq_bueno, y_der_bueno)
+print(f"Ganancia de un corte PERFECTO: {ganancia_buena}")
+
+y_izq_malo = np.array([1, 0])
+y_der_malo = np.array([1, 1, 0, 0])
+ganancia_mala = ganancia_informacion(y_padre, y_izq_malo, y_der_malo)
+print(f"Ganancia de un corte INÚTIL: {ganancia_mala}")
+
+# -----------------------
+# Declaración de la clase
+# -----------------------
+
 class Nodo:
     def __init__(self, atributo=None, umbral=None, izq=None, der=None,distr=None,*,clase=None):
         self.atributo = atributo
