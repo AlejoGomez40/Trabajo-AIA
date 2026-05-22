@@ -405,7 +405,36 @@ print(np.unique(yp_credito,return_counts=True))
 
 # Los árboles de decisión están formados por nodos. Usar la siguiente clase para la
 # implementación de los nodos:
-    
+
+# --------------------
+# Funciones Auxiliares
+# --------------------
+
+# Calcula las proporciones de cada clasificacion
+def prop_y(y):
+    _, conteos = np.unique(y, return_counts=True)
+    probabilidades = conteos / y.size
+    return probabilidades
+
+# Calcula la aleatoridad de datos en un nodo
+def entropia(y):
+    if y.size == 0:
+        return 0.0
+    probabilidades = prop_y(y) # Usamos la funcion anterior para obtener las probabilidades
+    return -np.sum(probabilidades * np.log2(probabilidades)) # Fórmula de entropía sobre el array
+
+# Calcula la ganancia de informacion al dividir los datos
+def ganancia_informacion(y_padre, y_izq, y_der):
+    peso_izq = y_izq.size / y_padre.size
+    peso_der = y_der.size / y_padre.size
+    entropia_hijos = (peso_izq * entropia(y_izq)) + (peso_der * entropia(y_der))
+    return entropia(y_padre) - entropia_hijos
+
+
+# -----------------------
+# Declaración de la clase
+# -----------------------
+
 class Nodo:
     def __init__(self, atributo=None, umbral=None, izq=None, der=None,distr=None,*,clase=None):
         self.atributo = atributo
