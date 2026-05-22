@@ -12,8 +12,8 @@
 # --------------------------------------------------------------------------
 # Autor(a) del trabajo:
 #
-# APELLIDOS: Gamito Moreno
-# NOMBRE: Carlos
+# APELLIDOS:
+# NOMBRE:
 #
 # Segundo(a) componente (si se trata de un grupo):
 #
