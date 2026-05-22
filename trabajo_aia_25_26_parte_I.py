@@ -12,8 +12,8 @@
 # --------------------------------------------------------------------------
 # Autor(a) del trabajo:
 #
-# APELLIDOS: Gómez Oliveira
-# NOMBRE: Alejandro
+# APELLIDOS: Gamito Moreno
+# NOMBRE: Carlos
 #
 # Segundo(a) componente (si se trata de un grupo):
 #
