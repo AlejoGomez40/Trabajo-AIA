@@ -316,31 +316,6 @@ def ganancia_informacion(y_padre, y_izq, y_der):
     entropia_hijos = (peso_izq * entropia(y_izq)) + (peso_der * entropia(y_der))
     return entropia(y_padre) - entropia_hijos
 
-# --------------------
-# Pruebas
-# --------------------
-
-print("--- 1. PROBANDO LA ENTROPÍA (El caos) ---")
-
-y_puro = np.array([0, 0, 0, 0])
-print(f"Entropía grupo puro (todo 0s): {entropia(y_puro)}") 
-
-y_empate = np.array([1, 1, 0, 0])
-print(f"Entropía grupo empatado (mitad y mitad): {entropia(y_empate)}")
-
-
-print("\n--- 2. PROBANDO LA GANANCIA (El beneficio de dividir) ---")
-
-y_padre = np.array([1, 1, 1, 0, 0, 0])
-y_izq_bueno = np.array([1, 1, 1])
-y_der_bueno = np.array([0, 0, 0])
-ganancia_buena = ganancia_informacion(y_padre, y_izq_bueno, y_der_bueno)
-print(f"Ganancia de un corte PERFECTO: {ganancia_buena}")
-
-y_izq_malo = np.array([1, 0])
-y_der_malo = np.array([1, 1, 0, 0])
-ganancia_mala = ganancia_informacion(y_padre, y_izq_malo, y_der_malo)
-print(f"Ganancia de un corte INÚTIL: {ganancia_mala}")
 
 # -----------------------
 # Declaración de la clase
