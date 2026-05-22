@@ -245,8 +245,15 @@ from carga_datos import *
 # ------------------------------------------------------------------
 
 
+def particion_entr_prueba(X,y,test=0.20):
+    prop_y = prop_y(y)
+    juntos = zip(X, y)
 
 
+def prop_y(y):
+    valores, numero = np.unique(y, return_counts=True)
+    return [(valor, n/y.size) for (valor, n) in zip(valores, numero)]
+    
 
 
 
