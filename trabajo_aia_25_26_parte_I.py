@@ -247,7 +247,7 @@ from carga_datos import *
 
 def particion_entr_prueba(X,y,test=0.20):
 
-    #Calculo cuantos tiene que haber de cada clase en el conjunto de entremaniento y de test
+    #Calculo cuantos tiene que haber de cada clase en el conjunto de entremaniento y de test.
 
     prop = prop_y(y) #Primero obtenemos la proporción del dataset original para mantenerlo y que sea estratificado
 
