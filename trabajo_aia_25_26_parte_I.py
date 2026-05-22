@@ -246,17 +246,131 @@ from carga_datos import *
 
 
 def particion_entr_prueba(X,y,test=0.20):
-    prop_y = prop_y(y)
-    juntos = zip(X, y)
+
+    #Calculo cuantos tiene que haber de cada clase en el conjunto de entremaniento y de test
+
+    prop = prop_y(y) #Primero obtenemos la proporción del dataset original para mantenerlo y que sea estratificado
+
+    tamano_test = int(X.shape[0]*test) #Calculamos el tamaño que debe de tener nuestro conjunto de validación (truncamos)
+    tamano_entrenamiento = X.shape[0] - tamano_test # Restamos al total el tamaño de test, para no perder ningún dato y este será el tamaño del conjunto de entrenamiento
+    
+    #Ahora recorriendo la lista de valores de las clases con su proporción original, calculamos cuantos datos de cada clase deberá
+    # de haber en los conjuntos de entrenamiento y test, para mantener la proporción.
+    n_cada_clase_entrenamiento=dict()
+    n_cada_clase_test=dict()
+    resto_cada_clase_entrenamiento= dict() #Vamos a guardar los restos para luego rellenar el conjunto si es necesario con la clase que estuviera más cercana al siguiente entero
+    resto_cada_clase_test=dict()
+
+    for (valor, p) in prop:
+        n_cada_clase_entrenamiento[valor] = int(tamano_entrenamiento*p)
+        resto_cada_clase_entrenamiento[valor] = (tamano_entrenamiento*p)%1
+
+        n_cada_clase_test[valor] =  int(tamano_test*p)
+        resto_cada_clase_test[valor] =  (tamano_test*p)%1
+
+    
+    #Rellenamos para tener el numero exacto de elementos, desajustando la proporción
+    objetivo_entrenamiento = sum(n_cada_clase_entrenamiento.values())     
+    objetivo_test = sum(n_cada_clase_test.values())
+
+    if tamano_entrenamiento!=objetivo_entrenamiento: #Si faltan datos debido al truncamiento anterior para alcanzar el tamaño, rellenamos
+        diferencia = tamano_entrenamiento-objetivo_entrenamiento
+        restos = sorted(resto_cada_clase_entrenamiento.items(), key=lambda x: x[1]) 
+        while diferencia!=0:
+            e = restos.pop()[0]            
+            n_cada_clase_entrenamiento[e] += 1
+            diferencia -= 1
+    
+    if tamano_test!=objetivo_test:
+        diferencia = tamano_test-objetivo_test
+        restos = sorted(resto_cada_clase_test.items(), key=lambda x: x[1]) 
+        while diferencia!=0:
+            e = restos.pop(-1)[0]
+            n_cada_clase_test[e] += 1
+            diferencia -= 1
 
 
+    ##Creo cada conjunto eligiendo aleatoriamente del original y eliminandolo una vez elegido (previa validación) para evitar repetidos
+    juntos = list(zip(X, y))
+
+    ##Primero el de entrenamiento
+
+    Xe = []
+    ye = []
+    
+    while not len(Xe) == tamano_entrenamiento:
+        i = random.randrange(len(juntos)) #Indice aleatorio
+        candidato = juntos[i] #Obtenemos el candidato
+        if n_cada_clase_entrenamiento[candidato[1]]-1>=0: #Si todavía faltan por añadir elementos de esa clase, lo añado, de lo contrario se toma otro candidato
+            n_cada_clase_entrenamiento[candidato[1]] = n_cada_clase_entrenamiento[candidato[1]]-1 #Restamos 1 al numero que faltan de esa clase
+            Xe.append(candidato[0])
+            ye.append(candidato[1])
+            juntos.pop(i) #Eliminamos para evitar duplicados
+    
+    
+
+    #Ahora el de test siguiendo la misma lógica
+    Xt = []
+    yt = []
+    while not len(Xt) == tamano_test:
+        i = random.randrange(len(juntos))
+        candidato = juntos[i]
+        if n_cada_clase_test[candidato[1]]-1>=0:
+            n_cada_clase_test[candidato[1]] = n_cada_clase_test[candidato[1]]-1
+            Xt.append(candidato[0])
+            yt.append(candidato[1])
+            juntos.pop(i)
+
+    
+    return np.array(Xe),np.array(Xt),np.array(ye),np.array(yt) #Devolvemos en formato de array
+
+
+
+
+#Función auxiliar que calcula la proporción de cada clase en un array de numpy
 def prop_y(y):
     valores, numero = np.unique(y, return_counts=True)
     return [(valor, n/y.size) for (valor, n) in zip(valores, numero)]
     
+Xev_cancer,Xp_cancer,yev_cancer,yp_cancer=particion_entr_prueba(X_cancer,y_cancer,test=0.2)
+
+print(np.unique(y_cancer,return_counts=True))
+# (array([0, 1]), array([212, 357]))
+
+print(np.unique(yev_cancer,return_counts=True))
+# (array([0, 1]), array([170, 286]))
+
+print(np.unique(yp_cancer,return_counts=True))
+# (array([0, 1]), array([42, 71]))    
 
 
+# Podemos ahora separar Xev_cancer, yev_cancer, en datos para entrenamiento y en 
+# datos para validación.
 
+Xe_cancer,Xv_cancer,ye_cancer,yv_cancer=particion_entr_prueba(Xev_cancer,yev_cancer,test=0.2)
+
+print(np.unique(ye_cancer,return_counts=True))
+#  (array([0, 1]), array([136, 229]))
+
+print(np.unique(yv_cancer,return_counts=True))
+# (array([0, 1]), array([34, 57]))
+
+
+# Otro ejemplo con más de dos clases:
+
+Xe_credito,Xp_credito,ye_credito,yp_credito=particion_entr_prueba(X_credito,y_credito,test=0.4)
+
+print(np.unique(y_credito,return_counts=True))
+# (array(['conceder', 'estudiar', 'no conceder'], dtype='<U11'),
+#  array([202, 228, 220]))
+
+print(np.unique(ye_credito,return_counts=True))
+# (array(['conceder', 'estudiar', 'no conceder'], dtype='<U11'),
+#  array([121, 137, 132]))
+
+print(np.unique(yp_credito,return_counts=True))
+# (array(['conceder', 'estudiar', 'no conceder'], dtype='<U11'),
+#  array([81, 91, 88]))
 
 
 
