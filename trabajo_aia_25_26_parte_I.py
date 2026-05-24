@@ -693,32 +693,34 @@ class ArbolDecision:
         # 5. Convertimos la lista final en un array de NumPy y lo devolvemos
         return nodo_actual.clase
 
-    def imprime_arbol(self,nombre_atrs,nombre_clase,nivel=0) :
-        # 1. Si es la primera llamada, empezamos por la raíz
-        if nodo is None:
-            nodo = self.raiz
+    def imprime_arbol(self, nombre_atrs, nombre_clase):
+        # Función auxiliar interna para manejar la recursividad
+        def _recorre_nodo(nodo, nivel):
+            # 5 espacios por cada nivel de profundidad
+            espacio = "     " * nivel
 
-        # 2. Creamos una cadena de espacios para que el árbol se vea "hacia adentro"
-        espacio = "  " * nivel
+            if nodo.es_hoja():
+                # Formato de hoja: "Sobrevive: 1 -- {1: 10}"
+                print(f"{espacio}{nombre_clase}: {nodo.clase} -- {nodo.distr}")
+            else:
+                # Nombre de la columna
+                nombre = nombre_atrs[nodo.atributo]
+                
+                # Rama izquierda (menor o igual, con 3 decimales)
+                print(f"{espacio}{nombre} <= {nodo.umbral:.3f}")
+                _recorre_nodo(nodo.izq, nivel + 1)
+                
+                # Rama derecha (mayor, con 3 decimales)
+                print(f"{espacio}{nombre} > {nodo.umbral:.3f}")
+                _recorre_nodo(nodo.der, nivel + 1)
 
-        # 3. Si es una hoja, imprimimos la predicción final
-        if nodo.es_hoja():
-            print(f"{espacio}Clase: {nodo.clase} (Distribución: {nodo.distr})")
-        
-        # 4. Si es un nodo interior, imprimimos la pregunta y bajamos
-        else:
-            # Traducimos el índice de la columna al nombre real (ej: de 0 a "edad")
-            nombre = nombre_atrs[nodo.atributo]
-            print(f"{espacio}Si {nombre} <= {nodo.umbral:.2f}:")
-            
-            # Llamada recursiva al hijo izquierdo
-            self.imprime_arbol(nombre_atrs, nombre_clase, nodo.izq, nivel + 1)
-            
-            # Imprimimos la otra rama (el "si no")
-            print(f"{espacio}Si {nombre} > {nodo.umbral:.2f}:")
-            
-            # Llamada recursiva al hijo derecho
-            self.imprime_arbol(nombre_atrs, nombre_clase, nodo.der, nivel + 1)
+        # Validación de seguridad
+        if self.raiz is None:
+            print("El árbol no ha sido entrenado.")
+            return
+
+        # Iniciamos en la raíz con nivel 0
+        _recorre_nodo(self.raiz, 0)
 
 
 
