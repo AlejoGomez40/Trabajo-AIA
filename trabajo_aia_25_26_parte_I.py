@@ -430,7 +430,6 @@ def ganancia_informacion(y_padre, y_izq, y_der):
     entropia_hijos = (peso_izq * entropia(y_izq)) + (peso_der * entropia(y_der))
     return entropia(y_padre) - entropia_hijos
 
-
 # -----------------------
 # Declaración de la clase
 # -----------------------
@@ -551,7 +550,7 @@ class ArbolDecision:
         self.prop_umbral = prop_umbral
         
         # Estas dos variables se inicializan vacías porque dependen de los datos de entrada
-        self.raiz = None                  # Almacenará el Nodo inicial tras el entrenamiento
+        self.raiz = None # Almacenará el Nodo inicial tras el entrenamiento
         self.atributos_seleccionados = None # Almacenará los índices de las columnas permitidas
                
     def entrena(self, X, y):
@@ -564,7 +563,7 @@ class ArbolDecision:
         else:
             self.atributos_seleccionados = list(range(total_atributos))
 
-        # 3. Invoca al motor recursivo desde el nivel de profundidad 0 y asigna el resultado a la raíz
+        # 3. Empieza recursividad desde el nivel de profundidad 0 y asigna el resultado a la raíz
         self.raiz = self.construye_arbol(X, y, prof=0)
 
     def construye_arbol(self, X, y, prof):
@@ -603,6 +602,8 @@ class ArbolDecision:
             indices_muestra = random.sample(range(n_filas), n_muestras)
             valores_muestra = columna_datos[indices_muestra]
             clases_muestra = y[indices_muestra]
+        
+
 
     def clasifica(self, X):
         
