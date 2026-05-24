@@ -244,6 +244,10 @@ from carga_datos import *
 #  array([81, 91, 88]))
 # ------------------------------------------------------------------
 
+#Función auxiliar que calcula la proporción de cada clase en un array de numpy
+def prop_y(y):
+    valores, numero = np.unique(y, return_counts=True)
+    return [(valor, n/y.size) for (valor, n) in zip(valores, numero)]
 
 def particion_entr_prueba(X,y,test=0.20):
 
@@ -324,14 +328,10 @@ def particion_entr_prueba(X,y,test=0.20):
     
     return np.array(Xe),np.array(Xt),np.array(ye),np.array(yt) #Devolvemos en formato de array
 
+# -----
+# Tests
+# -----
 
-
-
-#Función auxiliar que calcula la proporción de cada clase en un array de numpy
-def prop_y(y):
-    valores, numero = np.unique(y, return_counts=True)
-    return [(valor, n/y.size) for (valor, n) in zip(valores, numero)]
-    
 Xev_cancer,Xp_cancer,yev_cancer,yp_cancer=particion_entr_prueba(X_cancer,y_cancer,test=0.2)
 
 print(np.unique(y_cancer,return_counts=True))
@@ -437,12 +437,12 @@ def ganancia_informacion(y_padre, y_izq, y_der):
 
 class Nodo:
     def __init__(self, atributo=None, umbral=None, izq=None, der=None,distr=None,*,clase=None):
-        self.atributo = atributo
-        self.umbral = umbral
-        self.izq = izq
-        self.der = der
-        self.distr= distr
-        self.clase = clase
+        self.atributo = atributo # Indice de la columna por la que pregunta el nodo
+        self.umbral = umbral # Valor numerico de corte
+        self.izq = izq # Referencia al Nodo hijo izquierdo
+        self.der = der # Referencia al Nodo hijo derecho
+        self.distr= distr # Diccionario con el conteo de clases en ese punto
+        self.clase = clase # Si es hoja, almacena la prediccion. Si es interior, es None
         
     def es_hoja(self):
         return self.clase is not None
@@ -543,21 +543,75 @@ class Nodo:
 # Se pide implementar una clase ArbolDecision con el siguiente formato:
   
 
-# class ArbolDecision:
-#     def __init__(self, min_ejemplos_nodo_interior=5, max_prof=10,n_atrs=10,prop_umbral=1.0):
-#         ......
-#                
-#     def entrena(self, X, y):
-#         .......
-#        
-#     def clasifica(self, X):
-#         .......
-#
-#     def clasifica_prob(self, x):
-#         .......
-#
-#     def imprime_arbol(self,nombre_atrs,nombre_clase) :
-#         .......
+class ArbolDecision:
+    def __init__(self, min_ejemplos_nodo_interior=5, max_prof=10,n_atrs=10,prop_umbral=1.0):
+        self.min_ejemplos_nodo_interior = min_ejemplos_nodo_interior
+        self.max_prof = max_prof
+        self.n_atrs = n_atrs
+        self.prop_umbral = prop_umbral
+        
+        # Estas dos variables se inicializan vacías porque dependen de los datos de entrada
+        self.raiz = None                  # Almacenará el Nodo inicial tras el entrenamiento
+        self.atributos_seleccionados = None # Almacenará los índices de las columnas permitidas
+               
+    def entrena(self, X, y):
+        # 1. Determinamos el número total de características (columnas) en la matriz X
+        total_atributos = X.shape[1] 
+        
+        # 2. Sorteamos un subconjunto aleatorio de índices de columnas sin repetición
+        if self.n_atrs < total_atributos:
+            self.atributos_seleccionados = random.sample(range(total_atributos), self.n_atrs)
+        else:
+            self.atributos_seleccionados = list(range(total_atributos))
+
+        # 3. Invoca al motor recursivo desde el nivel de profundidad 0 y asigna el resultado a la raíz
+        self.raiz = self.construye_arbol(X, y, prof=0)
+
+    def construye_arbol(self, X, y, prof):
+        # 1. Distribucion de los datos entrantes
+        valores, conteos = np.unique(y, return_counts=True)
+        distr = dict(zip(valores, conteos))
+
+        # 2. Evaluacion de las reglas de parada
+        limite_profundidad = prof >= self.max_prof
+        pocos_ejemplos = X.shape[0] < self.min_ejemplos_nodo_interior
+        nodo_puro = len(valores) == 1
+
+        # 3. Ejecución de la parada (Creamos la hoja)
+        if limite_profundidad or pocos_ejemplos or nodo_puro:
+            indice_clase_mayoritaria = np.argmax(conteos)
+            clase_ganadora = valores[indice_clase_mayoritaria]
+            return Nodo(distr=distr, clase=clase_ganadora)
+        
+        # 4. Encontramos la mejor columan y el numero exacto por donde cortar
+        mejor_atributo, mejor_umbral = self.encuentra_mejor_division(X,y)
+
+    def encuentra_mejor_division(self, X, y):
+        mejor_ganancia = -1
+        mejor_atributo = None
+        mejor_umbral = None
+
+        # Recorremos solo las columnas que sorteamos al principio en entrena
+        for atributo in self.atributos_seleccionados:
+            columna_datos = X[:, atributo]
+            
+            # No miramos todas las filas, sacamos una muestra
+            n_filas = X.shape[0]
+            n_muestras = int(n_filas * self.prop_umbral)
+
+            # Seleccionamos las filas aleatoriamente
+            indices_muestra = random.sample(range(n_filas), n_muestras)
+            valores_muestra = columna_datos[indices_muestra]
+            clases_muestra = y[indices_muestra]
+
+    def clasifica(self, X):
+        
+
+    def clasifica_prob(self, x):
+        
+
+    def imprime_arbol(self,nombre_atrs,nombre_clase) :
+        
 
 
 
