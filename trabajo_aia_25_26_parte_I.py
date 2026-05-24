@@ -585,6 +585,27 @@ class ArbolDecision:
         # 4. Encontramos la mejor columan y el numero exacto por donde cortar
         mejor_atributo, mejor_umbral = self.encuentra_mejor_division(X,y)
 
+        # 5. Creamos las máscaras y dividimos físicamente AMBAS matrices (X e y)
+        mascara_izq = X[:, mejor_atributo] <= mejor_umbral
+        mascara_der = X[:, mejor_atributo] > mejor_umbral
+
+        X_izq, y_izq = X[mascara_izq], y[mascara_izq]
+        X_der, y_der = X[mascara_der], y[mascara_der]
+
+        # 6. Llamadas recursivas (usando el método propio de la clase y sumando nivel)
+        hijo_izq = self.construye_arbol(X_izq, y_izq, prof + 1)
+        hijo_der = self.construye_arbol(X_der, y_der, prof + 1)
+
+        # 7. Empaquetamos todo en un Nodo de tipo interior (sin parámetro 'clase')
+        return Nodo(
+            atributo=mejor_atributo, 
+            umbral=mejor_umbral, 
+            izq=hijo_izq, 
+            der=hijo_der, 
+            distr=distr
+        )
+
+
     def encuentra_mejor_division(self, X, y):
         mejor_ganancia = -1
         mejor_atributo = None
@@ -602,17 +623,102 @@ class ArbolDecision:
             indices_muestra = random.sample(range(n_filas), n_muestras)
             valores_muestra = columna_datos[indices_muestra]
             clases_muestra = y[indices_muestra]
-        
 
+            # Ordenar
+            indices_ordenados = np.argsort(valores_muestra)
+            valores_ordenados = valores_muestra[indices_ordenados]
+            clases_ordenadas = clases_muestra[indices_ordenados]
+
+            for i in range(1, len(valores_ordenados)):
+                if clases_ordenadas[i] != clases_ordenadas[i-1]:
+                    umbral_candidato = (valores_ordenados[i] + valores_ordenados[i-1])/2
+                    mascara_izq = columna_datos <= umbral_candidato
+                    mascara_der = columna_datos > umbral_candidato
+                    y_izq = y[mascara_izq]
+                    y_der = y[mascara_der]
+                    ganancia = ganancia_informacion(y, y_izq, y_der)
+                    
+                    if ganancia > mejor_ganancia:
+                        mejor_ganancia = ganancia
+                        mejor_atributo = atributo
+                        mejor_umbral = umbral_candidato
+            
+        return mejor_atributo, mejor_umbral
 
     def clasifica(self, X):
-        
+        # 1. Creamos una lista vacía para guardar la respuesta de cada fila
+        predicciones = []
+
+        # 2. Recorremos la matriz X fila por fila
+        for i in range(X.shape[0]):
+            # Extraemos los datos del ejemplo actual
+            ejemplo = X[i, :]
+            
+            # Empezamos el recorrido desde la cima del árbol
+            nodo_actual = self.raiz
+
+            # 3. Navegamos hacia abajo mientras el nodo actual NO sea una hoja
+            while not nodo_actual.es_hoja():
+                # Miramos el valor que tiene este ejemplo en la columna que pide el nodo
+                valor_atributo = ejemplo[nodo_actual.atributo]
+
+                # Comparamos con el umbral para decidir el camino
+                if valor_atributo <= nodo_actual.umbral:
+                    nodo_actual = nodo_actual.izq
+                else:
+                    nodo_actual = nodo_actual.der
+
+            # 4. Al salir del bucle while, hemos llegado a una hoja. 
+            # Guardamos la clase ganadora de esa hoja en nuestra lista.
+            predicciones.append(nodo_actual.clase)
+
+        # 5. Convertimos la lista final en un array de NumPy y lo devolvemos
+        return np.array(predicciones)
 
     def clasifica_prob(self, x):
-        
 
-    def imprime_arbol(self,nombre_atrs,nombre_clase) :
+        ejemplo = x
+        # Empezamos el recorrido desde la cima del árbol
+        nodo_actual = self.raiz
+        # 3. Navegamos hacia abajo mientras el nodo actual NO sea una hoja
+        while not nodo_actual.es_hoja():
+           # Miramos el valor que tiene este ejemplo en la columna que pide el nodo
+            valor_atributo = ejemplo[nodo_actual.atributo]
+            # Comparamos con el umbral para decidir el camino
+            if valor_atributo <= nodo_actual.umbral:
+                nodo_actual = nodo_actual.izq
+            else:
+                nodo_actual = nodo_actual.der
+
+        # 5. Convertimos la lista final en un array de NumPy y lo devolvemos
+        return nodo_actual.clase
+
+    def imprime_arbol(self,nombre_atrs,nombre_clase,nivel=0) :
+        # 1. Si es la primera llamada, empezamos por la raíz
+        if nodo is None:
+            nodo = self.raiz
+
+        # 2. Creamos una cadena de espacios para que el árbol se vea "hacia adentro"
+        espacio = "  " * nivel
+
+        # 3. Si es una hoja, imprimimos la predicción final
+        if nodo.es_hoja():
+            print(f"{espacio}Clase: {nodo.clase} (Distribución: {nodo.distr})")
         
+        # 4. Si es un nodo interior, imprimimos la pregunta y bajamos
+        else:
+            # Traducimos el índice de la columna al nombre real (ej: de 0 a "edad")
+            nombre = nombre_atrs[nodo.atributo]
+            print(f"{espacio}Si {nombre} <= {nodo.umbral:.2f}:")
+            
+            # Llamada recursiva al hijo izquierdo
+            self.imprime_arbol(nombre_atrs, nombre_clase, nodo.izq, nivel + 1)
+            
+            # Imprimimos la otra rama (el "si no")
+            print(f"{espacio}Si {nombre} > {nodo.umbral:.2f}:")
+            
+            # Llamada recursiva al hijo derecho
+            self.imprime_arbol(nombre_atrs, nombre_clase, nodo.der, nivel + 1)
 
 
 
@@ -663,9 +769,9 @@ class ClasificadorNoEntrenado(Exception): pass
 # TITANIC
 # -------
 
-# >>> clf_titanic = ArbolDecision(max_prof=3,min_ejemplos_nodo_interior=5,n_atrs=3)
-# >>> clf_titanic.entrena(X_train_titanic, y_train_titanic)
-# >>> clf_titanic.imprime_arbol(["Pclass", "Mujer", "Edad"],"Sobrevive")
+clf_titanic = ArbolDecision(max_prof=3,min_ejemplos_nodo_interior=5,n_atrs=3)
+clf_titanic.entrena(X_train_titanic, y_train_titanic)
+clf_titanic.imprime_arbol(["Pclass", "Mujer", "Edad"],"Sobrevive")
 
 # Mujer <= 0.000
 #      Edad <= 11.000
