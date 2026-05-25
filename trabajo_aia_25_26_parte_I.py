@@ -585,6 +585,11 @@ class ArbolDecision:
         # 4. Encontramos la mejor columan y el numero exacto por donde cortar
         mejor_atributo, mejor_umbral = self.encuentra_mejor_division(X,y)
 
+        if mejor_atributo is None:
+            indice_clase_mayoritaria = np.argmax(conteos)
+            clase_ganadora = valores[indice_clase_mayoritaria]
+            return Nodo(distr=distr, clase=clase_ganadora)
+
         # 5. Creamos las máscaras y dividimos físicamente AMBAS matrices (X e y)
         mascara_izq = X[:, mejor_atributo] <= mejor_umbral
         mascara_der = X[:, mejor_atributo] > mejor_umbral
@@ -646,6 +651,8 @@ class ArbolDecision:
         return mejor_atributo, mejor_umbral
 
     def clasifica(self, X):
+        if self.raiz is None:
+            raise ClasificadorNoEntrenado("El modelo debe ser entrenado antes de usarse.")
         # 1. Creamos una lista vacía para guardar la respuesta de cada fila
         predicciones = []
 
@@ -676,7 +683,8 @@ class ArbolDecision:
         return np.array(predicciones)
 
     def clasifica_prob(self, x):
-
+        if self.raiz is None:
+            raise ClasificadorNoEntrenado("El modelo debe ser entrenado antes de usarse.")
         ejemplo = x
         # Empezamos el recorrido desde la cima del árbol
         nodo_actual = self.raiz
@@ -691,9 +699,14 @@ class ArbolDecision:
                 nodo_actual = nodo_actual.der
 
         # 5. Convertimos la lista final en un array de NumPy y lo devolvemos
-        return nodo_actual.clase
+        total_ejemplos_hoja = sum(nodo_actual.distr.values())
+        probabilidades = {clase: conteo / total_ejemplos_hoja for clase, conteo in nodo_actual.distr.items()}
+        
+        return probabilidades
 
     def imprime_arbol(self, nombre_atrs, nombre_clase):
+        if self.raiz is None:
+            raise ClasificadorNoEntrenado("El modelo debe ser entrenado antes de usarse.")
         # Función auxiliar interna para manejar la recursividad
         def _recorre_nodo(nodo, nivel):
             # 5 espacios por cada nivel de profundidad
@@ -714,10 +727,10 @@ class ArbolDecision:
                 print(f"{espacio}{nombre} > {nodo.umbral:.3f}")
                 _recorre_nodo(nodo.der, nivel + 1)
 
-        # Validación de seguridad
-        if self.raiz is None:
-            print("El árbol no ha sido entrenado.")
-            return
+ #       # Validación de seguridad
+#      if self.raiz is None:
+ #           print("El árbol no ha sido entrenado.")
+  #          return
 
         # Iniciamos en la raíz con nivel 0
         _recorre_nodo(self.raiz, 0)
