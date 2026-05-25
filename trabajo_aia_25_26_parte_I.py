@@ -889,21 +889,21 @@ clf_titanic.imprime_arbol(["Pclass", "Mujer", "Edad"],"Sobrevive")
 # CÁNCER DE MAMA
 # --------------
 
-# >>> clf_cancer = ArbolDecision(min_ejemplos_nodo_interior=3,max_prof=10,n_atrs=15)
-# >>> clf_cancer.entrena(Xev_cancer, yev_cancer)
+clf_cancer = ArbolDecision(min_ejemplos_nodo_interior=3,max_prof=10,n_atrs=15)
+clf_cancer.entrena(Xev_cancer, yev_cancer)
 
-# >>> nombre_atrs_cancer=['mean radius', 'mean texture', 'mean perimeter', 'mean area',
-#        'mean smoothness', 'mean compactness', 'mean concavity',
-#        'mean concave points', 'mean symmetry', 'mean fractal dimension',
-#        'radius error', 'texture error', 'perimeter error', 'area error',
-#        'smoothness error', 'compactness error', 'concavity error',
-#        'concave points error', 'symmetry error',
-#        'fractal dimension error', 'worst radius', 'worst texture',
-#        'worst perimeter', 'worst area', 'worst smoothness',
-#        'worst compactness', 'worst concavity', 'worst concave points',
-#        'worst symmetry', 'worst fractal dimension']
+nombre_atrs_cancer=['mean radius', 'mean texture', 'mean perimeter', 'mean area',
+        'mean smoothness', 'mean compactness', 'mean concavity',
+        'mean concave points', 'mean symmetry', 'mean fractal dimension',
+        'radius error', 'texture error', 'perimeter error', 'area error',
+        'smoothness error', 'compactness error', 'concavity error',
+        'concave points error', 'symmetry error',
+        'fractal dimension error', 'worst radius', 'worst texture',
+        'worst perimeter', 'worst area', 'worst smoothness',
+        'worst compactness', 'worst concavity', 'worst concave points',
+        'worst symmetry', 'worst fractal dimension']
 
-# >>> clf_cancer.imprime_arbol(nombre_atrs_cancer,"Es benigno")
+clf_cancer.imprime_arbol(nombre_atrs_cancer,"Es benigno")
 
 
 #  mean concave points <= 0.051
@@ -977,9 +977,9 @@ def rendimiento(clasif,X,y):
 # Ejemplos (obviamente, el resultado puede variar):
 
 
-# >>> rendimiento(clf_titanic,X_train_titanic,y_train_titanic)
+print(rendimiento(clf_titanic,X_train_titanic,y_train_titanic))
 # 0.8158682634730539
-# >>> rendimiento(clf_titanic,X_test_titanic,y_test_titanic)
+print(rendimiento(clf_titanic,X_test_titanic,y_test_titanic))
 # 0.7982062780269058
 
 # >>> rendimiento(clf_votos,Xe_votos,ye_votos)
@@ -992,9 +992,9 @@ def rendimiento(clasif,X,y):
 # >>> rendimiento(clf_iris,X_test_iris,y_test_iris)
 # 0.9607843137254902
 
-# >>> rendimiento(clf_cancer,Xev_cancer,yev_cancer)
+print(rendimiento(clf_cancer,Xev_cancer,yev_cancer))
 # 0.9956140350877193
-# >>> rendimiento(clf_cancer,Xp_cancer,yp_cancer)
+print(rendimiento(clf_cancer,Xp_cancer,yp_cancer))
 # 0.9557522123893806
 
 
