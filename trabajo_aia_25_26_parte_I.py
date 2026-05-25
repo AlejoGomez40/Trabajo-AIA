@@ -1095,7 +1095,54 @@ print(rendimiento(clf_cancer,Xp_cancer,yp_cancer))
 #------------------------------------------------------------------------------
 
 
-
+class RandomForest:
+    def __init__(self, n_arboles=5,prop_muestras=1.0, min_ejemplos_nodo_interior=5, max_prof=10,n_atrs=10,prop_umbral=1.0):  
+        self.n_arboles = n_arboles
+        self.prop_muestras = prop_muestras                 
+        self.min_ejemplos_nodo_interior = min_ejemplos_nodo_interior
+        self.max_prof = max_prof
+        self.n_atrs = n_atrs
+        self.prop_umbral = prop_umbral
+        self.bosque = []
+    def entrena(self, X, y):
+        n_ejemplos = X.shape[0]
+        # Número de muestras por árbol (según tu prop_muestras)
+        n_muestras = int(n_ejemplos * self.prop_muestras)
+        for _ in range(self.n_arboles):
+            arbol = ArbolDecision(self.min_ejemplos_nodo_interior,self.max_prof,self.n_atrs)
+            # 1. GENERAMOS LOS ÍNDICES CON REEMPLAZO (Aquí ocurre la magia)
+            # np.random.choice elige números aleatorios, permitiendo que se repitan
+            indices = np.random.choice(range(n_ejemplos), size=n_muestras, replace=True)
+            X_local = X[indices]
+            y_local = y[indices]
+            arbol.entrena(X_local,y_local)
+            self.bosque.append(arbol)
+            
+    def clasifica(self, X):
+        # 1. Recopilar los votos de todos los árboles
+        todas_predicciones = []
+        for arbol in self.bosque:
+            # arbol.clasifica(X) devuelve un array con las respuestas de ese árbol para TODAS las filas
+            todas_predicciones.append(arbol.clasifica(X))
+            
+        # Convertimos la lista de listas en una matriz bidimensional de NumPy
+        # Si tienes 5 árboles y 100 ejemplos, la matriz tendrá forma (5, 100)
+        matriz_predicciones = np.array(todas_predicciones)                    
+        
+        # 2. Calcular la clase mayoritaria (moda) para cada ejemplo
+        predicciones_finales = []
+        
+        # Al usar .T (transpuesta), giramos la matriz a (100, 5). 
+        # Así, cada iteración de este bucle nos da exactamente los 5 votos para una misma fila de X.
+        for votos_fila in matriz_predicciones.T:
+            # Usamos la misma lógica de np.unique que ya conoces
+            valores, conteos = np.unique(votos_fila, return_counts=True)
+            clase_ganadora = valores[np.argmax(conteos)]
+            predicciones_finales.append(clase_ganadora)
+            
+        # 3. Devolvemos el veredicto final del bosque como un array de NumPy
+        return np.array(predicciones_finales)
+        
 
 
 
@@ -1162,6 +1209,9 @@ import pandas as pd
 
 #   Se pide incluir aquí las definiciones y órdenes necesarias para definir
 #   las siguientes variables, con los datasets anteriores como arrays de numpy.
+
+
+
 
 
 # * X_train_credito, y_train_credito, X_test_credito, y_test_credito
