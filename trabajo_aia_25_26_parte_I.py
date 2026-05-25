@@ -569,7 +569,7 @@ class ArbolDecision:
     def construye_arbol(self, X, y, prof):
         # 1. Distribucion de los datos entrantes
         valores, conteos = np.unique(y, return_counts=True)
-        distr = dict(zip(valores, conteos))
+        distr = dict(zip(valores.tolist(), conteos.tolist()))
 
         # 2. Evaluacion de las reglas de parada
         limite_profundidad = prof >= self.max_prof
