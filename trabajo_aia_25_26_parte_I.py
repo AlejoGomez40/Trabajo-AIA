@@ -249,7 +249,7 @@ def prop_y(y):
     valores, numero = np.unique(y, return_counts=True)
     return [(valor, n/y.size) for (valor, n) in zip(valores, numero)]
 
-def particion_entr_prueba(X,y,test=0.20):
+def particion_e2ntr_prueba(X,y,test=0.20):
 
     #Calculo cuantos tiene que haber de cada clase en el conjunto de entremaniento y de test.
 
@@ -327,6 +327,41 @@ def particion_entr_prueba(X,y,test=0.20):
 
     
     return np.array(Xe),np.array(Xt),np.array(ye),np.array(yt) #Devolvemos en formato de array
+
+
+def particion_entr_prueba(X, y, test=0.20):
+    indices_train = []
+    indices_test = []
+    
+    # Obtenemos las clases únicas y cuántas hay de cada una
+    clases, conteos = np.unique(y, return_counts=True)
+    
+    for clase, conteo in zip(clases, conteos):
+        # 1. Obtenemos todos los índices donde la clase es igual a la actual
+        indices_clase = np.where(y == clase)[0]
+        
+        # 2. Los barajamos aleatoriamente
+        np.random.shuffle(indices_clase)
+        
+        # 3. Calculamos exactamente por dónde cortar para sacar el porcentaje de test
+        corte = int(conteo * test)
+        
+        # 4. Repartimos
+        indices_test.extend(indices_clase[:corte])
+        indices_train.extend(indices_clase[corte:])
+        
+    # Convertimos a arrays nativos de NumPy
+    indices_train = np.array(indices_train)
+    indices_test = np.array(indices_test)
+    
+    # Barajamos los índices finales para que los datos no queden ordenados en bloques por clase
+    np.random.shuffle(indices_train)
+    np.random.shuffle(indices_test)
+    
+    # Devolvemos los trozos exactos de las matrices originales usando los índices
+    return X[indices_train], X[indices_test], y[indices_train], y[indices_test]
+
+
 
 # -----
 # Tests
@@ -411,7 +446,7 @@ print(np.unique(yp_credito,return_counts=True))
 # --------------------
 
 # Calcula las proporciones de cada clasificacion
-def prop_y(y):
+def proporciones_y(y):
     _, conteos = np.unique(y, return_counts=True)
     probabilidades = conteos / y.size
     return probabilidades
@@ -420,7 +455,7 @@ def prop_y(y):
 def entropia(y):
     if y.size == 0:
         return 0.0
-    probabilidades = prop_y(y) # Usamos la funcion anterior para obtener las probabilidades
+    probabilidades = proporciones_y(y) # Usamos la funcion anterior para obtener las probabilidades
     return -np.sum(probabilidades * np.log2(probabilidades)) # Fórmula de entropía sobre el array
 
 # Calcula la ganancia de informacion al dividir los datos
@@ -611,7 +646,7 @@ class ArbolDecision:
         )
 
 
-    def encuentra_mejor_division(self, X, y):
+    def encuentra_mejor_division_vantigua(self, X, y):
         mejor_ganancia = -1
         mejor_atributo = None
         mejor_umbral = None
@@ -648,6 +683,49 @@ class ArbolDecision:
                         mejor_atributo = atributo
                         mejor_umbral = umbral_candidato
             
+        return mejor_atributo, mejor_umbral
+
+
+    def encuentra_mejor_division(self, X, y):
+        mejor_ganancia = 0
+        mejor_atributo = None
+        mejor_umbral = None
+
+        n_filas = X.shape[0]
+        n_muestras = int(n_filas * self.prop_umbral)
+
+        for atributo in self.atributos_seleccionados:
+            columna_datos = X[:, atributo]
+            
+            indices_muestra = random.sample(range(n_filas), n_muestras)
+            valores_muestra = columna_datos[indices_muestra]
+            clases_muestra = y[indices_muestra]
+
+            indices_ordenados = np.argsort(valores_muestra)
+            valores_ordenados = valores_muestra[indices_ordenados]
+            clases_ordenadas = clases_muestra[indices_ordenados]
+
+            # 1. Detección vectorial de cambios de clase
+            cambios_clase = clases_ordenadas[:-1] != clases_ordenadas[1:]
+            indices_cambio = np.where(cambios_clase)[0]
+            
+            # 2. Cálculo en bloque de todos los umbrales candidatos
+            umbrales_candidatos = (valores_ordenados[indices_cambio] + valores_ordenados[indices_cambio + 1]) / 2
+            
+            # 3. Iteración directa solo sobre umbrales únicos y viables
+            for umbral_candidato in np.unique(umbrales_candidatos):
+                mascara_izq = columna_datos <= umbral_candidato
+                mascara_der = ~mascara_izq # Reutilizamos la máscara invirtiéndola
+                
+                y_izq = y[mascara_izq]
+                y_der = y[mascara_der]
+                ganancia = ganancia_informacion(y, y_izq, y_der)
+                
+                if ganancia > mejor_ganancia:
+                    mejor_ganancia = ganancia
+                    mejor_atributo = atributo
+                    mejor_umbral = umbral_candidato
+                    
         return mejor_atributo, mejor_umbral
 
     def clasifica(self, X):
@@ -1210,36 +1288,82 @@ import pandas as pd
 #   Se pide incluir aquí las definiciones y órdenes necesarias para definir
 #   las siguientes variables, con los datasets anteriores como arrays de numpy.
 
-
+X_train_imdb, X_valid_imdb, y_train_imdb, y_valid_imdb = particion_entr_prueba(X_train_imdb, y_train_imdb, test=0.2)
 
 
 
 # * X_train_credito, y_train_credito, X_test_credito, y_test_credito
-#   conteniendo el dataset de crédito con los atributos numñericos:
+#   conteniendo el dataset de crédito con los atributos numericos:
 
 
+encoder_credito = OrdinalEncoder()
+X_credito_num = encoder_credito.fit_transform(X_credito)
 
+#Ahora separemos un conjunto de entrenamiento, prueba y validacion.
+#Empezaremos con 20% test, y dentro del 80% restante un 20% validacion y lo restante entrenamiento
 
-
-
-
+X_train_val_credito, X_test_credito, y_train_val_credito, y_test_credito = particion_entr_prueba(X_credito_num,y_credito,test=0.2)
+X_train_credito, X_valid_credito, y_train_credito, y_valid_credito = particion_entr_prueba(X_train_val_credito,y_train_val_credito,test=0.2)
 
 
 
 # * X_train_adult, y_train_adult, X_test_adult, y_test_adult
 #   conteniendo el AdultDataset con los atributos numéricos:
 
+#Leemos el csv adultDataset.csv
+df_adult = pd.read_csv("datos/adultDataset.csv")
 
+#Separamos X e y
+X_adult_provisional = df_adult.iloc[:, :-1].values
+y_adult = df_adult.iloc[:, -1].values
 
+#Separamos las características numericas
+X_adult_num = X_adult_provisional[:, :4]
 
+#Hacemos OrdinalEncoder a las no numericas
+X_adult_no_num = X_adult_provisional[:, 4:]
 
+encoder_adult = OrdinalEncoder()
+X_adult_no_num_transformado = encoder_adult.fit_transform(X_adult_no_num)
 
+#Lo juntamos
+X_adult = np.concatenate((X_adult_num, X_adult_no_num_transformado), axis=1)
+
+#Sacamos los conjuntos de entrenamiento y prueba
+X_train_val_adult, X_test_adult, y_train_val_adult, y_test_adult = particion_entr_prueba(X_adult, y_adult, test=0.2)
+X_train_adult, X_valid_adult, y_train_adult, y_valid_adult = particion_entr_prueba(X_train_val_adult, y_train_val_adult, test=0.2)
 
 
 
 # * X_train_dg, y_train_dg, X_valid_dg, y_valid_dg, X_test_dg, y_test_dg
 #   conteniendo el dataset de los dígitos escritos a mano:
     
+#Primero hacemos una funcion auxiliar que nos devuelva la X e y dadas las imágenes y sus etiquetas
+def cargar_imagenes(ruta_imagenes, ruta_etiquetas):
+    y = np.loadtxt(ruta_etiquetas, dtype=int) #Como las etiquetas ya son numericas, las leemos directamente
+
+    #Leemos las imagenes
+    with open(ruta_imagenes, 'r') as f_imagenes:
+        lineas = f_imagenes.readlines() #Leenmos todas las lineas del archivo
+        
+    num_imagenes = y.shape[0]
+    imagenes = []
+    
+    for i in range(num_imagenes):
+        lineas_imagen = lineas[28*i : (i+1)*28] #Vamos cogiendo las 28 lineas correspondiente a cada imagen
+        imagen_plana = []
+        for l in lineas_imagen:
+            aux = list(l.strip("\n").ljust(28, ' ').replace(' ', '0').replace('+', '1').replace('#', '1')) #Quitamos el salto de linea, rellenamos con espacios en blanco si hace falta para llegar a 28, y sustituimos los espacios en blanco por 0 y los pixeles negros como 1
+            aux = list(map(lambda x: int(x),aux))
+            imagen_plana.extend(aux) #Añadimos esa fila a la imagen_plana
+        imagenes.append(imagen_plana) #Añadimos la imagen a la lista de imagenes
+    X = np.array(imagenes) #Creamos el array
+
+    return X, y
+
+X_train_dg, y_train_dg = cargar_imagenes("datos/digitdata/trainingimages", "datos/digitdata/traininglabels")
+X_valid_dg, y_valid_dg = cargar_imagenes("datos/digitdata/validationimages", "datos/digitdata/validationlabels")
+X_test_dg, y_test_dg = cargar_imagenes("datos/digitdata/testimages","datos/digitdata/testlabels")
 
 
 
@@ -1277,9 +1401,102 @@ import pandas as pd
 # el archivo. 
 
 # ----------------------------
+def buscar_y_evaluar(nombre, X_tr, y_tr, X_val, y_val, X_test, y_test, 
+                     lista_n_arboles, lista_prop_muestras, lista_min_ejemplos_nodo_interior, 
+                     lista_max_prof, lista_n_atrs, lista_prop_umbral):
+    
+    mejor_rend_val = -1
+    mejores_params = {}
+    
+    print(f"\n" + "="*45)
+    print(f"AJUSTE DE HIPERPARÁMETROS: {nombre}")
+    print("="*45)
+    
+    # 1. Búsqueda exhaustiva usando los 6 hiperparámetros exactos
+    for n_arboles in lista_n_arboles:
+        for prop_muestras in lista_prop_muestras:
+            for min_ejemplos_nodo_interior in lista_min_ejemplos_nodo_interior:
+                for max_prof in lista_max_prof:
+                    for n_atrs in lista_n_atrs:
+                        for prop_umbral in lista_prop_umbral:
+                            
+                            rf = RandomForest(
+                                n_arboles=n_arboles,
+                                prop_muestras=prop_muestras,
+                                min_ejemplos_nodo_interior=min_ejemplos_nodo_interior,
+                                max_prof=max_prof,
+                                n_atrs=n_atrs,
+                                prop_umbral=prop_umbral
+                            )
+                            
+                            rf.entrena(X_tr, y_tr)
+                            rend = rendimiento(rf, X_val, y_val)
+                            
+                            if rend > mejor_rend_val:
+                                mejor_rend_val = rend
+                                mejores_params = {
+                                    'n_arboles': n_arboles,
+                                    'prop_muestras': prop_muestras,
+                                    'min_ejemplos_nodo_interior': min_ejemplos_nodo_interior,
+                                    'max_prof': max_prof,
+                                    'n_atrs': n_atrs,
+                                    'prop_umbral': prop_umbral
+                                }
+
+    
+    print(f"-> Mejor validación: {mejor_rend_val:.4f}")
+    print(f"-> Parámetros: {mejores_params}")
+    
+    # 2. Entrenamiento final con unión de Entrenamiento + Validación
+    X_tr_val_unidos = np.concatenate((X_tr, X_val))
+    y_tr_val_unidos = np.concatenate((y_tr, y_val))
+    
+    rf_final = RandomForest(**mejores_params) # Pasa el diccionario directamente a los argumentos
+    rf_final.entrena(X_tr_val_unidos, y_tr_val_unidos)
+    
+    # 3. Evaluación en Prueba (Test)
+    rend_test = rendimiento(rf_final, X_test, y_test)
+    print(f">>> RENDIMIENTO TEST ({nombre}): {rend_test:.4f}\n")
+    return mejores_params
 
 
 
+
+# 1. CRÉDITO (Total: 8 combinaciones - Rápido)
+buscar_y_evaluar("CRÉDITO", X_train_credito, y_train_credito, X_valid_credito, y_valid_credito, X_test_credito, y_test_credito,
+                 lista_n_arboles=[5, 10], 
+                 lista_prop_muestras=[1.0], 
+                 lista_min_ejemplos_nodo_interior=[5], 
+                 lista_max_prof=[5, 10], 
+                 lista_n_atrs=[3, 6], 
+                 lista_prop_umbral=[1.0])
+
+# 2. ADULT DATASET (Total: 4 combinaciones - Pesado por filas)
+buscar_y_evaluar("ADULT", X_train_adult, y_train_adult, X_valid_adult, y_valid_adult, X_test_adult, y_test_adult,
+                 lista_n_arboles=[5], 
+                 lista_prop_muestras=[0.5], 
+                 lista_min_ejemplos_nodo_interior=[20], 
+                 lista_max_prof=[5, 10], 
+                 lista_n_atrs=[4, 8], 
+                 lista_prop_umbral=[0.1])
+
+# 3. IMDB (Total: 2 combinaciones - Pesado por columnas)
+buscar_y_evaluar("IMDB", X_train_imdb, y_train_imdb, X_valid_imdb, y_valid_imdb, X_test_imdb, y_test_imdb,
+                 lista_n_arboles=[10], 
+                 lista_prop_muestras=[0.8], 
+                 lista_min_ejemplos_nodo_interior=[10], 
+                 lista_max_prof=[10], 
+                 lista_n_atrs=[24, 50], 
+                 lista_prop_umbral=[0.1])
+
+# 4. DÍGITOS (Total: 2 combinaciones - Pesado por columnas)
+buscar_y_evaluar("DÍGITOS", X_train_dg, y_train_dg, X_valid_dg, y_valid_dg, X_test_dg, y_test_dg,
+                 lista_n_arboles=[10], 
+                 lista_prop_muestras=[0.8], 
+                 lista_min_ejemplos_nodo_interior=[10], 
+                 lista_max_prof=[10], 
+                 lista_n_atrs=[28, 56], 
+                 lista_prop_umbral=[0.1])
 
 
 
