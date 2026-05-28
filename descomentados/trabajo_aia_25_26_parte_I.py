@@ -164,7 +164,7 @@ from carga_datos import *
 
 # Definir una función 
 
-# particion_entr_prueba(X,y,test=0.20)
+#           particion_entr_prueba(X,y,test=0.20)
 
 # que recibiendo un conjunto de datos X, y sus correspondientes valores de
 # clasificación y, divide ambos en datos de entrenamiento y prueba, en la
@@ -246,8 +246,6 @@ from carga_datos import *
 
 
 def particion_entr_prueba(X, y, test=0.20):
-
-    # Estos indices los usaremos despues para separar los datos
     indices_train = []
     indices_test = []
     
@@ -256,7 +254,6 @@ def particion_entr_prueba(X, y, test=0.20):
     
     #Repartimos cada clase con la proporcion indicada
     for clase, conteo in zip(clases, conteos):
-
         # 1. Obtenemos todos los índices donde la clase es igual a la actual
         indices_clase = np.where(y == clase)[0]
         
@@ -266,7 +263,7 @@ def particion_entr_prueba(X, y, test=0.20):
         # 3. Calculamos exactamente por dónde cortar para sacar el porcentaje de test
         corte = int(conteo * test)
         
-        # 4. Repartimos (usamos extend porque sino se perderian todos los indices calculados anteriormente)
+        # 4. Repartimos
         indices_test.extend(indices_clase[:corte])
         indices_train.extend(indices_clase[corte:])
         
@@ -278,7 +275,7 @@ def particion_entr_prueba(X, y, test=0.20):
     np.random.shuffle(indices_train)
     np.random.shuffle(indices_test)
     
-    # Devolvemos los trozos exactos de las matrices originales usando los índices 
+    # Devolvemos los trozos exactos de las matrices originales usando los índices
     return X[indices_train], X[indices_test], y[indices_train], y[indices_test]
 
 
@@ -384,32 +381,6 @@ def ganancia_informacion(y_padre, y_izq, y_der):
     peso_der = y_der.size / y_padre.size
     entropia_hijos = (peso_izq * entropia(y_izq)) + (peso_der * entropia(y_der))
     return entropia(y_padre) - entropia_hijos
-
-# =======
-# Ejemplo
-# =======
-#
-# y_padre = ['Sí', 'Sí', 'Sí', 'Sí', 'Sí', 'No', 'No', 'No', 'No', 'No'] (5 Sí, 5 No)
-# 
-# 1. entropia(y_padre):
-#    - proporciones_y calculará: 50% Sí (0.5) y 50% No (0.5).
-#    - La fórmula dará: -(0.5 * log2(0.5) + 0.5 * log2(0.5)) = 1.0
-#    - Entropía = 1.0 significa "Caos total" o máxima incertidumbre (estamos a cara o cruz).
-#
-# 2. Hacemos un corte
-#    - y_izq (Hace Sol): ['Sí', 'Sí', 'Sí', 'Sí', 'No'] (4 Sí, 1 No) -> Son 5 personas.
-#    - y_der (No hace Sol): ['Sí', 'No', 'No', 'No', 'No'] (1 Sí, 4 No) -> Son 5 personas.
-#
-# 3. Calculamos la entropía de los hijos:
-#    - entropia(y_izq) = -(0.8 * log2(0.8) + 0.2 * log2(0.2)) = 0.72 (Menos caos, domina el 'Sí')
-#    - entropia(y_der) = -(0.2 * log2(0.2) + 0.8 * log2(0.8)) = 0.72 (Menos caos, domina el 'No')
-#
-# 4. ganancia_informacion(y_padre, y_izq, y_der):
-#    - peso_izq = 5/10 (0.5) y peso_der = 5/10 (0.5)
-#    - entropia_hijos = (0.5 * 0.72) + (0.5 * 0.72) = 0.72
-#    - Ganancia = Entropía Padre (1.0) - Entropía Hijos (0.72) = 0.28
-#
-# ==============================================================================
 
 # -----------------------
 # Declaración de la clase
@@ -563,10 +534,9 @@ class ArbolDecision:
             clase_ganadora = valores[indice_clase_mayoritaria]
             return Nodo(distr=distr, clase=clase_ganadora)
         
-        # 4. En caso de que no sea una hoja, entonces, encontramos la mejor columna y el numero exacto por donde cortar
+        # 4. Encontramos la mejor columan y el numero exacto por donde cortar
         mejor_atributo, mejor_umbral = self.encuentra_mejor_division(X,y)
 
-        # En caso de no haber encontrado ningun corte
         if mejor_atributo is None:
             indice_clase_mayoritaria = np.argmax(conteos)
             clase_ganadora = valores[indice_clase_mayoritaria]
@@ -592,8 +562,48 @@ class ArbolDecision:
             distr=distr
         )
 
-    def encuentra_mejor_division(self, X, y):
 
+    def encuentra_mejor_division_vantigua(self, X, y):
+        mejor_ganancia = -1
+        mejor_atributo = None
+        mejor_umbral = None
+
+        # Recorremos solo las columnas que sorteamos al principio en entrena
+        for atributo in self.atributos_seleccionados:
+            columna_datos = X[:, atributo]
+            
+            # No miramos todas las filas, sacamos una muestra
+            n_filas = X.shape[0]
+            n_muestras = int(n_filas * self.prop_umbral)
+
+            # Seleccionamos las filas aleatoriamente
+            indices_muestra = random.sample(range(n_filas), n_muestras)
+            valores_muestra = columna_datos[indices_muestra]
+            clases_muestra = y[indices_muestra]
+
+            # Ordenar
+            indices_ordenados = np.argsort(valores_muestra)
+            valores_ordenados = valores_muestra[indices_ordenados]
+            clases_ordenadas = clases_muestra[indices_ordenados]
+
+            for i in range(1, len(valores_ordenados)):
+                if clases_ordenadas[i] != clases_ordenadas[i-1]:
+                    umbral_candidato = (valores_ordenados[i] + valores_ordenados[i-1])/2
+                    mascara_izq = columna_datos <= umbral_candidato
+                    mascara_der = columna_datos > umbral_candidato
+                    y_izq = y[mascara_izq]
+                    y_der = y[mascara_der]
+                    ganancia = ganancia_informacion(y, y_izq, y_der)
+                    
+                    if ganancia > mejor_ganancia:
+                        mejor_ganancia = ganancia
+                        mejor_atributo = atributo
+                        mejor_umbral = umbral_candidato
+            
+        return mejor_atributo, mejor_umbral
+
+
+    def encuentra_mejor_division(self, X, y):
         # 1. Inicialización de los mejores valores encontrados. 
         # La ganancia base es 0 para ignorar cortes inútiles (donde todos los datos van al mismo lado).
         mejor_ganancia = 0
@@ -607,10 +617,9 @@ class ArbolDecision:
 
         # 3. Iteramos exclusivamente sobre el subconjunto de columnas que tocó por sorteo para este árbol.
         for atributo in self.atributos_seleccionados:
-
-            # Cogemos el valor del atributo para cada fila
             columna_datos = X[:, atributo]
             
+            # --- FASE A: MUESTREO Y ORDENACIÓN ---
             # Extraemos una muestra aleatoria de índices y sacamos sus valores y clases correspondientes.
             indices_muestra = random.sample(range(n_filas), n_muestras)
             valores_muestra = columna_datos[indices_muestra]
@@ -618,31 +627,23 @@ class ArbolDecision:
 
             # Ordenamos los valores de menor a mayor. argsort() nos da los índices para ordenar 
             # tanto los valores como las clases de forma sincronizada.
-            # Si no los ordenamos el umbral no tiene sentido
             indices_ordenados = np.argsort(valores_muestra)
             valores_ordenados = valores_muestra[indices_ordenados]
             clases_ordenadas = clases_muestra[indices_ordenados]
 
+            # --- FASE B: DETECCIÓN VECTORIAL DE UMBRALES ---
             # Comparamos el array de clases consigo mismo, pero desfasado en una posición.
             # Esto devuelve un array booleano (True donde la clase cambia respecto al valor anterior).
             cambios_clase = clases_ordenadas[:-1] != clases_ordenadas[1:]
             
             # np.where extrae las posiciones exactas (los índices numéricos) donde el valor fue True.
-            # --------------------------------------------------------------------------------------------
-            # El [0] es porque:
-            # Imaginemos un array booleano donde True significa "aquí cambia la clase"
-            # cambios = np.array([False, True, False, True, False])
-            # Si usamos np.where sin el [0], nos devuelve la tupla completa
-            # resultado_bruto = np.where(cambios)
-            # print("1D - Resultado bruto:   ", resultado_bruto) 
-            # Salida: (array([1, 3]),)  <-- Fíjate en los paréntesis y la coma final. Es una tupla.
-            # --------------------------------------------------------------------------------------------
             indices_cambio = np.where(cambios_clase)[0]
             
             # Calculamos el punto medio aritmético entre los valores donde hubo cambio de clase.
             # Esto se hace en bloque para todos los candidatos a la vez (matemática de matrices pura).
             umbrales_candidatos = (valores_ordenados[indices_cambio] + valores_ordenados[indices_cambio + 1]) / 2
             
+            # --- FASE C: EVALUACIÓN DE LOS CORTES ---
             # np.unique filtra los umbrales duplicados para no calcular lo mismo dos veces.
             for umbral_candidato in np.unique(umbrales_candidatos):
                 
@@ -715,9 +716,7 @@ class ArbolDecision:
                 nodo_actual = nodo_actual.der
 
         # 5. Convertimos la lista final en un array de NumPy y lo devolvemos
-        # Cogemos el numero total de ejemplos que caen en esa rama
         total_ejemplos_hoja = sum(nodo_actual.distr.values())
-        # Caculamos la probabilidad de que sea x clase
         probabilidades = {clase: conteo / total_ejemplos_hoja for clase, conteo in nodo_actual.distr.items()}
         
         return probabilidades
@@ -788,14 +787,7 @@ class ArbolDecision:
 
 # Si se llama al método de clasificación, o al de impresión, antes de entrenar el modelo,
 # se debe devolver (con raise) una excepción:
-# Imaginemos un array booleano donde True significa "aquí cambia la clase"
-cambios = np.array([False, True, False, True, False])
 
-# Si usamos np.where sin el [0], nos devuelve la tupla completa
-resultado_bruto = np.where(cambios)
-
-print("1D - Resultado bruto:   ", resultado_bruto) 
-# Salida: (array([1, 3]),)  <-- Fíjate en los paréntesis y la coma final. Es una tupla.
 class ClasificadorNoEntrenado(Exception): pass
 
         
