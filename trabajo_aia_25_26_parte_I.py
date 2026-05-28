@@ -244,90 +244,6 @@ from carga_datos import *
 #  array([81, 91, 88]))
 # ------------------------------------------------------------------
 
-#Función auxiliar que calcula la proporción de cada clase en un array de numpy
-def prop_y(y):
-    valores, numero = np.unique(y, return_counts=True)
-    return [(valor, n/y.size) for (valor, n) in zip(valores, numero)]
-
-def particion_e2ntr_prueba(X,y,test=0.20):
-
-    #Calculo cuantos tiene que haber de cada clase en el conjunto de entremaniento y de test.
-
-    prop = prop_y(y) #Primero obtenemos la proporción del dataset original para mantenerlo y que sea estratificado
-
-    tamano_test = int(X.shape[0]*test) #Calculamos el tamaño que debe de tener nuestro conjunto de validación (truncamos)
-    tamano_entrenamiento = X.shape[0] - tamano_test # Restamos al total el tamaño de test, para no perder ningún dato y este será el tamaño del conjunto de entrenamiento
-    
-    #Ahora recorriendo la lista de valores de las clases con su proporción original, calculamos cuantos datos de cada clase deberá
-    # de haber en los conjuntos de entrenamiento y test, para mantener la proporción.
-    n_cada_clase_entrenamiento=dict()
-    n_cada_clase_test=dict()
-    resto_cada_clase_entrenamiento= dict() #Vamos a guardar los restos para luego rellenar el conjunto si es necesario con la clase que estuviera más cercana al siguiente entero
-    resto_cada_clase_test=dict()
-
-    for (valor, p) in prop:
-        n_cada_clase_entrenamiento[valor] = int(tamano_entrenamiento*p)
-        resto_cada_clase_entrenamiento[valor] = (tamano_entrenamiento*p)%1
-
-        n_cada_clase_test[valor] =  int(tamano_test*p)
-        resto_cada_clase_test[valor] =  (tamano_test*p)%1
-
-    
-    #Rellenamos para tener el numero exacto de elementos, desajustando la proporción
-    objetivo_entrenamiento = sum(n_cada_clase_entrenamiento.values())     
-    objetivo_test = sum(n_cada_clase_test.values())
-
-    if tamano_entrenamiento!=objetivo_entrenamiento: #Si faltan datos debido al truncamiento anterior para alcanzar el tamaño, rellenamos
-        diferencia = tamano_entrenamiento-objetivo_entrenamiento
-        restos = sorted(resto_cada_clase_entrenamiento.items(), key=lambda x: x[1]) 
-        while diferencia!=0:
-            e = restos.pop()[0]            
-            n_cada_clase_entrenamiento[e] += 1
-            diferencia -= 1
-    
-    if tamano_test!=objetivo_test:
-        diferencia = tamano_test-objetivo_test
-        restos = sorted(resto_cada_clase_test.items(), key=lambda x: x[1]) 
-        while diferencia!=0:
-            e = restos.pop(-1)[0]
-            n_cada_clase_test[e] += 1
-            diferencia -= 1
-
-
-    ##Creo cada conjunto eligiendo aleatoriamente del original y eliminandolo una vez elegido (previa validación) para evitar repetidos
-    juntos = list(zip(X, y))
-
-    ##Primero el de entrenamiento
-
-    Xe = []
-    ye = []
-    
-    while not len(Xe) == tamano_entrenamiento:
-        i = random.randrange(len(juntos)) #Indice aleatorio
-        candidato = juntos[i] #Obtenemos el candidato
-        if n_cada_clase_entrenamiento[candidato[1]]-1>=0: #Si todavía faltan por añadir elementos de esa clase, lo añado, de lo contrario se toma otro candidato
-            n_cada_clase_entrenamiento[candidato[1]] = n_cada_clase_entrenamiento[candidato[1]]-1 #Restamos 1 al numero que faltan de esa clase
-            Xe.append(candidato[0])
-            ye.append(candidato[1])
-            juntos.pop(i) #Eliminamos para evitar duplicados
-    
-    
-
-    #Ahora el de test siguiendo la misma lógica
-    Xt = []
-    yt = []
-    while not len(Xt) == tamano_test:
-        i = random.randrange(len(juntos))
-        candidato = juntos[i]
-        if n_cada_clase_test[candidato[1]]-1>=0:
-            n_cada_clase_test[candidato[1]] = n_cada_clase_test[candidato[1]]-1
-            Xt.append(candidato[0])
-            yt.append(candidato[1])
-            juntos.pop(i)
-
-    
-    return np.array(Xe),np.array(Xt),np.array(ye),np.array(yt) #Devolvemos en formato de array
-
 
 def particion_entr_prueba(X, y, test=0.20):
     indices_train = []
@@ -336,6 +252,7 @@ def particion_entr_prueba(X, y, test=0.20):
     # Obtenemos las clases únicas y cuántas hay de cada una
     clases, conteos = np.unique(y, return_counts=True)
     
+    #Repartimos cada clase con la proporcion indicada
     for clase, conteo in zip(clases, conteos):
         # 1. Obtenemos todos los índices donde la clase es igual a la actual
         indices_clase = np.where(y == clase)[0]
@@ -350,7 +267,7 @@ def particion_entr_prueba(X, y, test=0.20):
         indices_test.extend(indices_clase[:corte])
         indices_train.extend(indices_clase[corte:])
         
-    # Convertimos a arrays nativos de NumPy
+    # Convertimos a arrays de NumPy
     indices_train = np.array(indices_train)
     indices_test = np.array(indices_test)
     
@@ -687,40 +604,62 @@ class ArbolDecision:
 
 
     def encuentra_mejor_division(self, X, y):
+        # 1. Inicialización de los mejores valores encontrados. 
+        # La ganancia base es 0 para ignorar cortes inútiles (donde todos los datos van al mismo lado).
         mejor_ganancia = 0
         mejor_atributo = None
         mejor_umbral = None
 
+        # 2. Determinamos cuántos datos evaluaremos para buscar los cortes.
+        # Si prop_umbral es 0.1 y hay 1000 filas, solo usaremos 100 filas para proponer umbrales.
         n_filas = X.shape[0]
         n_muestras = int(n_filas * self.prop_umbral)
 
+        # 3. Iteramos exclusivamente sobre el subconjunto de columnas que tocó por sorteo para este árbol.
         for atributo in self.atributos_seleccionados:
             columna_datos = X[:, atributo]
             
+            # --- FASE A: MUESTREO Y ORDENACIÓN ---
+            # Extraemos una muestra aleatoria de índices y sacamos sus valores y clases correspondientes.
             indices_muestra = random.sample(range(n_filas), n_muestras)
             valores_muestra = columna_datos[indices_muestra]
             clases_muestra = y[indices_muestra]
 
+            # Ordenamos los valores de menor a mayor. argsort() nos da los índices para ordenar 
+            # tanto los valores como las clases de forma sincronizada.
             indices_ordenados = np.argsort(valores_muestra)
             valores_ordenados = valores_muestra[indices_ordenados]
             clases_ordenadas = clases_muestra[indices_ordenados]
 
-            # 1. Detección vectorial de cambios de clase
+            # --- FASE B: DETECCIÓN VECTORIAL DE UMBRALES ---
+            # Comparamos el array de clases consigo mismo, pero desfasado en una posición.
+            # Esto devuelve un array booleano (True donde la clase cambia respecto al valor anterior).
             cambios_clase = clases_ordenadas[:-1] != clases_ordenadas[1:]
+            
+            # np.where extrae las posiciones exactas (los índices numéricos) donde el valor fue True.
             indices_cambio = np.where(cambios_clase)[0]
             
-            # 2. Cálculo en bloque de todos los umbrales candidatos
+            # Calculamos el punto medio aritmético entre los valores donde hubo cambio de clase.
+            # Esto se hace en bloque para todos los candidatos a la vez (matemática de matrices pura).
             umbrales_candidatos = (valores_ordenados[indices_cambio] + valores_ordenados[indices_cambio + 1]) / 2
             
-            # 3. Iteración directa solo sobre umbrales únicos y viables
+            # --- FASE C: EVALUACIÓN DE LOS CORTES ---
+            # np.unique filtra los umbrales duplicados para no calcular lo mismo dos veces.
             for umbral_candidato in np.unique(umbrales_candidatos):
-                mascara_izq = columna_datos <= umbral_candidato
-                mascara_der = ~mascara_izq # Reutilizamos la máscara invirtiéndola
                 
+                # IMPORTANTE: El corte se evalúa sobre TODOS los datos del nodo (columna_datos), 
+                # no solo sobre la muestra reducida que usamos para buscar los umbrales.
+                mascara_izq = columna_datos <= umbral_candidato
+                mascara_der = ~mascara_izq # Invertir la máscara booleana es más rápido que recalcular con '>'
+                
+                # Separamos el array de clasificaciones (y) en los dos hijos potenciales.
                 y_izq = y[mascara_izq]
                 y_der = y[mascara_der]
+                
+                # Calculamos cuánta incertidumbre eliminamos si cortamos por este umbral.
                 ganancia = ganancia_informacion(y, y_izq, y_der)
                 
+                # Si este corte mejora lo que teníamos, lo guardamos como el nuevo ganador.
                 if ganancia > mejor_ganancia:
                     mejor_ganancia = ganancia
                     mejor_atributo = atributo
@@ -1074,27 +1013,6 @@ print(rendimiento(clf_cancer,Xev_cancer,yev_cancer))
 # 0.9956140350877193
 print(rendimiento(clf_cancer,Xp_cancer,yp_cancer))
 # 0.9557522123893806
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1497,9 +1415,6 @@ buscar_y_evaluar("DÍGITOS", X_train_dg, y_train_dg, X_valid_dg, y_valid_dg, X_t
                  lista_max_prof=[10], 
                  lista_n_atrs=[28, 56], 
                  lista_prop_umbral=[0.1])
-
-
-
 
 
 
