@@ -628,15 +628,6 @@ class ArbolDecision:
             cambios_clase = clases_ordenadas[:-1] != clases_ordenadas[1:]
             
             # np.where extrae las posiciones exactas (los índices numéricos) donde el valor fue True.
-            # --------------------------------------------------------------------------------------------
-            # El [0] es porque:
-            # Imaginemos un array booleano donde True significa "aquí cambia la clase"
-            # cambios = np.array([False, True, False, True, False])
-            # Si usamos np.where sin el [0], nos devuelve la tupla completa
-            # resultado_bruto = np.where(cambios)
-            # print("1D - Resultado bruto:   ", resultado_bruto) 
-            # Salida: (array([1, 3]),)  <-- Fíjate en los paréntesis y la coma final. Es una tupla.
-            # --------------------------------------------------------------------------------------------
             indices_cambio = np.where(cambios_clase)[0]
             
             # Calculamos el punto medio aritmético entre los valores donde hubo cambio de clase.
@@ -1183,78 +1174,107 @@ class RandomForest:
 from sklearn.preprocessing import OrdinalEncoder
 import pandas as pd
 
+# ==========================================
+# 1. DATASET DE CRÉDITO
+# ==========================================
+
 #   Se pide incluir aquí las definiciones y órdenes necesarias para definir
 #   las siguientes variables, con los datasets anteriores como arrays de numpy.
-
 
 # * X_train_credito, y_train_credito, X_test_credito, y_test_credito
 #   conteniendo el dataset de crédito con los atributos numericos:
 
+# 1. Separamos el conjunto de entrenamiento y prueba 
+X_train_credito_raw, X_test_credito_raw, y_train_credito, y_test_credito = particion_entr_prueba(X_credito, y_credito, test=0.2)
 
+# 2. Creamos el encoder
 encoder_credito = OrdinalEncoder()
-X_credito_num = encoder_credito.fit_transform(X_credito)
 
-#Ahora separemos un conjunto de entrenamient y prueba
-X_train_credito, X_test_credito, y_train_credito, y_test_credito = particion_entr_prueba(X_credito_num,y_credito,test=0.2)
+# 3. Entrenamos y transformamos SOLO el conjunto de entrenamiento
+X_train_credito = encoder_credito.fit_transform(X_train_credito_raw)
 
+# 4. Transformamos el conjunto de prueba (solo usando transform)
+X_test_credito = encoder_credito.transform(X_test_credito_raw)
 
+# ==========================================
+# 2. DATASET ADULTO
+# ==========================================
 
 # * X_train_adult, y_train_adult, X_test_adult, y_test_adult
 #   conteniendo el AdultDataset con los atributos numéricos:
 
-#Leemos el csv adultDataset.csv
+# Leemos el csv adultDataset.csv
 df_adult = pd.read_csv("datos/adultDataset.csv")
 
-#Separamos X e y
+# Separamos X e y
 X_adult_provisional = df_adult.iloc[:, :-1].values
 y_adult = df_adult.iloc[:, -1].values
 
-#Separamos las características numericas
-X_adult_num = X_adult_provisional[:, :4]
+# 1. Partimos primero los datos en crudo
+X_train_adult_raw, X_test_adult_raw, y_train_adult, y_test_adult = particion_entr_prueba(X_adult_provisional, y_adult, test=0.2)
 
-#Hacemos OrdinalEncoder a las no numericas
-X_adult_no_num = X_adult_provisional[:, 4:]
+# 2. Separamos las características numéricas y no numéricas del TRAIN
+X_train_num = X_train_adult_raw[:, :4]
+X_train_no_num = X_train_adult_raw[:, 4:]
 
+# 3. Separamos las características numéricas y no numéricas del TEST
+X_test_num = X_test_adult_raw[:, :4]
+X_test_no_num = X_test_adult_raw[:, 4:]
+
+# 4. Hacemos OrdinalEncoder entrenando SOLO con el TRAIN
 encoder_adult = OrdinalEncoder()
-X_adult_no_num_transformado = encoder_adult.fit_transform(X_adult_no_num)
+X_train_no_num_trans = encoder_adult.fit_transform(X_train_no_num)
 
-#Lo juntamos
-X_adult = np.concatenate((X_adult_num, X_adult_no_num_transformado), axis=1)
+# 5. Transformamos el TEST con las reglas aprendidas
+X_test_no_num_trans = encoder_adult.transform(X_test_no_num)
 
-#Sacamos los conjuntos de entrenamiento y prueba
-X_train_adult, X_test_adult, y_train_adult, y_test_adult = particion_entr_prueba(X_adult, y_adult, test=0.2)
+# 6. Volvemos a juntar las columnas numéricas con las codificadas (concatenar)
+X_train_adult = np.concatenate((X_train_num, X_train_no_num_trans), axis=1)
+X_test_adult = np.concatenate((X_test_num, X_test_no_num_trans), axis=1)
 
-
+# ==========================================
+# 3. DATASET DIGITOS
+# ==========================================
 
 # * X_train_dg, y_train_dg, X_valid_dg, y_valid_dg, X_test_dg, y_test_dg
 #   conteniendo el dataset de los dígitos escritos a mano:
     
-#Primero hacemos una funcion auxiliar que nos devuelva la X e y dadas las imágenes y sus etiquetas
+# Función auxiliar que nos devuelve la X e y dadas las imágenes y sus etiquetas
 def cargar_imagenes(ruta_imagenes, ruta_etiquetas):
-    y = np.loadtxt(ruta_etiquetas, dtype=int) #Como las etiquetas ya son numericas, las leemos directamente
+    # Como las etiquetas ya son numéricas, las leemos directamente
+    y = np.loadtxt(ruta_etiquetas, dtype=int) 
 
-    #Leemos las imagenes
+    # Leemos las imágenes
     with open(ruta_imagenes, 'r') as f_imagenes:
-        lineas = f_imagenes.readlines() #Leenmos todas las lineas del archivo
+        lineas = f_imagenes.readlines() 
         
     num_imagenes = y.shape[0]
     imagenes = []
     
     for i in range(num_imagenes):
-        lineas_imagen = lineas[28*i : (i+1)*28] #Vamos cogiendo las 28 lineas correspondiente a cada imagen
+        # Vamos cogiendo las 28 líneas correspondientes a cada imagen
+        lineas_imagen = lineas[28*i : (i+1)*28] 
         imagen_plana = []
+        
         for l in lineas_imagen:
-            aux = list(l.strip("\n").ljust(28, ' ').replace(' ', '0').replace('+', '1').replace('#', '1')) #Quitamos el salto de linea, rellenamos con espacios en blanco si hace falta para llegar a 28, y sustituimos los espacios en blanco por 0 y los pixeles negros como 1
-            aux = list(map(lambda x: int(x),aux))
-            imagen_plana.extend(aux) #Añadimos esa fila a la imagen_plana
-        imagenes.append(imagen_plana) #Añadimos la imagen a la lista de imagenes
-    X = np.array(imagenes) #Creamos el array
+            # Quitamos el salto de línea, rellenamos con espacios si hace falta para llegar a 28, 
+            # y sustituimos los espacios por 0 y los píxeles negros (+ y #) por 1.
+            aux = list(l.strip("\n").ljust(28, ' ').replace(' ', '0').replace('+', '1').replace('#', '1')) 
+            aux = [int(x) for x in aux] # Convertimos los caracteres a números enteros
+            imagen_plana.extend(aux) # Añadimos esa fila a la imagen_plana
+            
+        imagenes.append(imagen_plana) # Añadimos la imagen a la lista de imágenes
+        
+    X = np.array(imagenes) # Creamos el array de NumPy
 
     return X, y
 
+# Cargamos directamente los tres conjuntos usando tus rutas (el dataset ya viene dividido)
 X_train_dg, y_train_dg = cargar_imagenes("datos/digitdata/trainingimages", "datos/digitdata/traininglabels")
 X_valid_dg, y_valid_dg = cargar_imagenes("datos/digitdata/validationimages", "datos/digitdata/validationlabels")
-X_test_dg, y_test_dg = cargar_imagenes("datos/digitdata/testimages","datos/digitdata/testlabels")
+X_test_dg, y_test_dg   = cargar_imagenes("datos/digitdata/testimages", "datos/digitdata/testlabels")
+
+
 
 
 
