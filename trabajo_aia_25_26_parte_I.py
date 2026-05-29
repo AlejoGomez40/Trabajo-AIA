@@ -287,45 +287,45 @@ def particion_entr_prueba(X, y, test=0.20):
 # Tests
 # -----
 
-Xev_cancer,Xp_cancer,yev_cancer,yp_cancer=particion_entr_prueba(X_cancer,y_cancer,test=0.2)
+# Xev_cancer,Xp_cancer,yev_cancer,yp_cancer=particion_entr_prueba(X_cancer,y_cancer,test=0.2)
 
-print(np.unique(y_cancer,return_counts=True))
-# (array([0, 1]), array([212, 357]))
+# print(np.unique(y_cancer,return_counts=True))
+# # (array([0, 1]), array([212, 357]))
 
-print(np.unique(yev_cancer,return_counts=True))
-# (array([0, 1]), array([170, 286]))
+# print(np.unique(yev_cancer,return_counts=True))
+# # (array([0, 1]), array([170, 286]))
 
-print(np.unique(yp_cancer,return_counts=True))
-# (array([0, 1]), array([42, 71]))    
-
-
-# Podemos ahora separar Xev_cancer, yev_cancer, en datos para entrenamiento y en 
-# datos para validación.
-
-Xe_cancer,Xv_cancer,ye_cancer,yv_cancer=particion_entr_prueba(Xev_cancer,yev_cancer,test=0.2)
-
-print(np.unique(ye_cancer,return_counts=True))
-#  (array([0, 1]), array([136, 229]))
-
-print(np.unique(yv_cancer,return_counts=True))
-# (array([0, 1]), array([34, 57]))
+# print(np.unique(yp_cancer,return_counts=True))
+# # (array([0, 1]), array([42, 71]))    
 
 
-# Otro ejemplo con más de dos clases:
+# # Podemos ahora separar Xev_cancer, yev_cancer, en datos para entrenamiento y en 
+# # datos para validación.
 
-Xe_credito,Xp_credito,ye_credito,yp_credito=particion_entr_prueba(X_credito,y_credito,test=0.4)
+# Xe_cancer,Xv_cancer,ye_cancer,yv_cancer=particion_entr_prueba(Xev_cancer,yev_cancer,test=0.2)
 
-print(np.unique(y_credito,return_counts=True))
-# (array(['conceder', 'estudiar', 'no conceder'], dtype='<U11'),
-#  array([202, 228, 220]))
+# print(np.unique(ye_cancer,return_counts=True))
+# #  (array([0, 1]), array([136, 229]))
 
-print(np.unique(ye_credito,return_counts=True))
-# (array(['conceder', 'estudiar', 'no conceder'], dtype='<U11'),
-#  array([121, 137, 132]))
+# print(np.unique(yv_cancer,return_counts=True))
+# # (array([0, 1]), array([34, 57]))
 
-print(np.unique(yp_credito,return_counts=True))
-# (array(['conceder', 'estudiar', 'no conceder'], dtype='<U11'),
-#  array([81, 91, 88]))
+
+# # Otro ejemplo con más de dos clases:
+
+# Xe_credito,Xp_credito,ye_credito,yp_credito=particion_entr_prueba(X_credito,y_credito,test=0.4)
+
+# print(np.unique(y_credito,return_counts=True))
+# # (array(['conceder', 'estudiar', 'no conceder'], dtype='<U11'),
+# #  array([202, 228, 220]))
+
+# print(np.unique(ye_credito,return_counts=True))
+# # (array(['conceder', 'estudiar', 'no conceder'], dtype='<U11'),
+# #  array([121, 137, 132]))
+
+# print(np.unique(yp_credito,return_counts=True))
+# # (array(['conceder', 'estudiar', 'no conceder'], dtype='<U11'),
+# #  array([81, 91, 88]))
 
 
 
@@ -646,7 +646,7 @@ class ArbolDecision:
             # np.unique filtra los umbrales duplicados para no calcular lo mismo dos veces.
             for umbral_candidato in np.unique(umbrales_candidatos):
                 
-                # IMPORTANTE: El corte se evalúa sobre TODOS los datos del nodo (columna_datos), 
+                # El corte se evalúa sobre todos los datos del nodo (columna_datos), 
                 # no solo sobre la muestra reducida que usamos para buscar los umbrales.
                 mascara_izq = columna_datos <= umbral_candidato
                 mascara_der = ~mascara_izq # Invertir la máscara booleana es más rápido que recalcular con '>'
@@ -745,10 +745,6 @@ class ArbolDecision:
                 print(f"{espacio}{nombre} > {nodo.umbral:.3f}")
                 _recorre_nodo(nodo.der, nivel + 1)
 
- #       # Validación de seguridad
-#      if self.raiz is None:
- #           print("El árbol no ha sido entrenado.")
-  #          return
 
         # Iniciamos en la raíz con nivel 0
         _recorre_nodo(self.raiz, 0)
@@ -786,16 +782,8 @@ class ArbolDecision:
 #   (ver ejemplos más abajo) [SUGERENCIA: hacerlo con una función auxiliar recursiva] 
 
 
-# Si se llama al método de clasificación, o al de impresión, antes de entrenar el modelo,
-# se debe devolver (con raise) una excepción:
-# Imaginemos un array booleano donde True significa "aquí cambia la clase"
-cambios = np.array([False, True, False, True, False])
-
-# Si usamos np.where sin el [0], nos devuelve la tupla completa
-resultado_bruto = np.where(cambios)
-
-print("1D - Resultado bruto:   ", resultado_bruto) 
-# Salida: (array([1, 3]),)  <-- Fíjate en los paréntesis y la coma final. Es una tupla.
+# # Si se llama al método de clasificación, o al de impresión, antes de entrenar el modelo,
+# # se debe devolver (con raise) una excepción:
 class ClasificadorNoEntrenado(Exception): pass
 
         
@@ -809,9 +797,9 @@ class ClasificadorNoEntrenado(Exception): pass
 # TITANIC
 # -------
 
-clf_titanic = ArbolDecision(max_prof=3,min_ejemplos_nodo_interior=5,n_atrs=3)
-clf_titanic.entrena(X_train_titanic, y_train_titanic)
-clf_titanic.imprime_arbol(["Pclass", "Mujer", "Edad"],"Sobrevive")
+# clf_titanic = ArbolDecision(max_prof=3,min_ejemplos_nodo_interior=5,n_atrs=3)
+# clf_titanic.entrena(X_train_titanic, y_train_titanic)
+# clf_titanic.imprime_arbol(["Pclass", "Mujer", "Edad"],"Sobrevive")
 
 # Mujer <= 0.000
 #      Edad <= 11.000
@@ -914,21 +902,21 @@ clf_titanic.imprime_arbol(["Pclass", "Mujer", "Edad"],"Sobrevive")
 # CÁNCER DE MAMA
 # --------------
 
-clf_cancer = ArbolDecision(min_ejemplos_nodo_interior=3,max_prof=10,n_atrs=15)
-clf_cancer.entrena(Xev_cancer, yev_cancer)
+# clf_cancer = ArbolDecision(min_ejemplos_nodo_interior=3,max_prof=10,n_atrs=15)
+# clf_cancer.entrena(Xev_cancer, yev_cancer)
 
-nombre_atrs_cancer=['mean radius', 'mean texture', 'mean perimeter', 'mean area',
-        'mean smoothness', 'mean compactness', 'mean concavity',
-        'mean concave points', 'mean symmetry', 'mean fractal dimension',
-        'radius error', 'texture error', 'perimeter error', 'area error',
-        'smoothness error', 'compactness error', 'concavity error',
-        'concave points error', 'symmetry error',
-        'fractal dimension error', 'worst radius', 'worst texture',
-        'worst perimeter', 'worst area', 'worst smoothness',
-        'worst compactness', 'worst concavity', 'worst concave points',
-        'worst symmetry', 'worst fractal dimension']
+# nombre_atrs_cancer=['mean radius', 'mean texture', 'mean perimeter', 'mean area',
+#         'mean smoothness', 'mean compactness', 'mean concavity',
+#         'mean concave points', 'mean symmetry', 'mean fractal dimension',
+#         'radius error', 'texture error', 'perimeter error', 'area error',
+#         'smoothness error', 'compactness error', 'concavity error',
+#         'concave points error', 'symmetry error',
+#         'fractal dimension error', 'worst radius', 'worst texture',
+#         'worst perimeter', 'worst area', 'worst smoothness',
+#         'worst compactness', 'worst concavity', 'worst concave points',
+#         'worst symmetry', 'worst fractal dimension']
 
-clf_cancer.imprime_arbol(nombre_atrs_cancer,"Es benigno")
+# clf_cancer.imprime_arbol(nombre_atrs_cancer,"Es benigno")
 
 
 #  mean concave points <= 0.051
@@ -1002,9 +990,9 @@ def rendimiento(clasif,X,y):
 # Ejemplos (obviamente, el resultado puede variar):
 
 
-print(rendimiento(clf_titanic,X_train_titanic,y_train_titanic))
+# print(rendimiento(clf_titanic,X_train_titanic,y_train_titanic))
 # 0.8158682634730539
-print(rendimiento(clf_titanic,X_test_titanic,y_test_titanic))
+# print(rendimiento(clf_titanic,X_test_titanic,y_test_titanic))
 # 0.7982062780269058
 
 # >>> rendimiento(clf_votos,Xe_votos,ye_votos)
@@ -1017,14 +1005,10 @@ print(rendimiento(clf_titanic,X_test_titanic,y_test_titanic))
 # >>> rendimiento(clf_iris,X_test_iris,y_test_iris)
 # 0.9607843137254902
 
-print(rendimiento(clf_cancer,Xev_cancer,yev_cancer))
+# print(rendimiento(clf_cancer,Xev_cancer,yev_cancer))
 # 0.9956140350877193
-print(rendimiento(clf_cancer,Xp_cancer,yp_cancer))
+# print(rendimiento(clf_cancer,Xp_cancer,yp_cancer))
 # 0.9557522123893806
-
-
-
-
 
 
 
@@ -1156,18 +1140,6 @@ class RandomForest:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 # =========================================
 # EJERCICIO 4: AJUSTANDO LOS CLASIFICADORES
 # =========================================
@@ -1214,9 +1186,6 @@ import pandas as pd
 #   Se pide incluir aquí las definiciones y órdenes necesarias para definir
 #   las siguientes variables, con los datasets anteriores como arrays de numpy.
 
-X_train_imdb, X_valid_imdb, y_train_imdb, y_valid_imdb = particion_entr_prueba(X_train_imdb, y_train_imdb, test=0.2)
-
-
 
 # * X_train_credito, y_train_credito, X_test_credito, y_test_credito
 #   conteniendo el dataset de crédito con los atributos numericos:
@@ -1225,11 +1194,8 @@ X_train_imdb, X_valid_imdb, y_train_imdb, y_valid_imdb = particion_entr_prueba(X
 encoder_credito = OrdinalEncoder()
 X_credito_num = encoder_credito.fit_transform(X_credito)
 
-#Ahora separemos un conjunto de entrenamiento, prueba y validacion.
-#Empezaremos con 20% test, y dentro del 80% restante un 20% validacion y lo restante entrenamiento
-
-X_train_val_credito, X_test_credito, y_train_val_credito, y_test_credito = particion_entr_prueba(X_credito_num,y_credito,test=0.2)
-X_train_credito, X_valid_credito, y_train_credito, y_valid_credito = particion_entr_prueba(X_train_val_credito,y_train_val_credito,test=0.2)
+#Ahora separemos un conjunto de entrenamient y prueba
+X_train_credito, X_test_credito, y_train_credito, y_test_credito = particion_entr_prueba(X_credito_num,y_credito,test=0.2)
 
 
 
@@ -1256,8 +1222,7 @@ X_adult_no_num_transformado = encoder_adult.fit_transform(X_adult_no_num)
 X_adult = np.concatenate((X_adult_num, X_adult_no_num_transformado), axis=1)
 
 #Sacamos los conjuntos de entrenamiento y prueba
-X_train_val_adult, X_test_adult, y_train_val_adult, y_test_adult = particion_entr_prueba(X_adult, y_adult, test=0.2)
-X_train_adult, X_valid_adult, y_train_adult, y_valid_adult = particion_entr_prueba(X_train_val_adult, y_train_val_adult, test=0.2)
+X_train_adult, X_test_adult, y_train_adult, y_test_adult = particion_entr_prueba(X_adult, y_adult, test=0.2)
 
 
 
@@ -1327,18 +1292,21 @@ X_test_dg, y_test_dg = cargar_imagenes("datos/digitdata/testimages","datos/digit
 # el archivo. 
 
 # ----------------------------
+
+#Definimos una funcion que dado un conjunto de datos (train, test, valid(si no lo da se calcula dentro)), probemos todas las combinaciones posibles de los hiperparametros candidatos que pasemos
 def buscar_y_evaluar(nombre, X_tr, y_tr, X_val, y_val, X_test, y_test, 
                      lista_n_arboles, lista_prop_muestras, lista_min_ejemplos_nodo_interior, 
                      lista_max_prof, lista_n_atrs, lista_prop_umbral):
-    
+    if X_val is None:
+        X_tr, X_val, y_tr, y_val = particion_entr_prueba(X_tr,y_tr,test=0.2) #Sacamos el conjuntos de validacion
+
     mejor_rend_val = -1
     mejores_params = {}
     
-    print(f"\n" + "="*45)
     print(f"AJUSTE DE HIPERPARÁMETROS: {nombre}")
-    print("="*45)
+    print("==================================")
     
-    # 1. Búsqueda exhaustiva usando los 6 hiperparámetros exactos
+    # 1. Búsqueda usando los 6 hiperparámetros 
     for n_arboles in lista_n_arboles:
         for prop_muestras in lista_prop_muestras:
             for min_ejemplos_nodo_interior in lista_min_ejemplos_nodo_interior:
@@ -1346,6 +1314,7 @@ def buscar_y_evaluar(nombre, X_tr, y_tr, X_val, y_val, X_test, y_test,
                     for n_atrs in lista_n_atrs:
                         for prop_umbral in lista_prop_umbral:
                             
+                            #Construimos el bosque con la combinación de parámetros
                             rf = RandomForest(
                                 n_arboles=n_arboles,
                                 prop_muestras=prop_muestras,
@@ -1354,11 +1323,12 @@ def buscar_y_evaluar(nombre, X_tr, y_tr, X_val, y_val, X_test, y_test,
                                 n_atrs=n_atrs,
                                 prop_umbral=prop_umbral
                             )
-                            
+                            #Lo entrenamos
                             rf.entrena(X_tr, y_tr)
+                            #Evaluamos el rendimiento
                             rend = rendimiento(rf, X_val, y_val)
                             
-                            if rend > mejor_rend_val:
+                            if rend > mejor_rend_val: #Si el rendimiento mejora al anterior, guardamos esos hiperparámetros
                                 mejor_rend_val = rend
                                 mejores_params = {
                                     'n_arboles': n_arboles,
@@ -1370,64 +1340,70 @@ def buscar_y_evaluar(nombre, X_tr, y_tr, X_val, y_val, X_test, y_test,
                                 }
 
     
-    print(f"-> Mejor validación: {mejor_rend_val:.4f}")
-    print(f"-> Parámetros: {mejores_params}")
+    print(f"Mejor validación: {mejor_rend_val:.4f}")
+    print(f"Parámetros: {mejores_params}")
     
-    # 2. Entrenamiento final con unión de Entrenamiento + Validación
+    # 2.Volvemos a juntar entrenamiento y validación para el entrenamiento final
     X_tr_val_unidos = np.concatenate((X_tr, X_val))
     y_tr_val_unidos = np.concatenate((y_tr, y_val))
     
-    rf_final = RandomForest(**mejores_params) # Pasa el diccionario directamente a los argumentos
+    rf_final = RandomForest(**mejores_params) # Pasa el diccionario directamente a los argumentos (El operador ** desempaqueta)
     rf_final.entrena(X_tr_val_unidos, y_tr_val_unidos)
     
-    # 3. Evaluación en Prueba (Test)
+    # 3. Evaluación en Test
     rend_test = rendimiento(rf_final, X_test, y_test)
-    print(f">>> RENDIMIENTO TEST ({nombre}): {rend_test:.4f}\n")
+    print(f"RENDIMIENTO TEST ({nombre}): {rend_test:.4f}\n")
     return mejores_params
 
 
 
 
-# 1. CRÉDITO (Total: 8 combinaciones - Rápido)
-buscar_y_evaluar("CRÉDITO", X_train_credito, y_train_credito, X_valid_credito, y_valid_credito, X_test_credito, y_test_credito,
-                 lista_n_arboles=[5, 10], 
-                 lista_prop_muestras=[1.0], 
-                 lista_min_ejemplos_nodo_interior=[5], 
-                 lista_max_prof=[5, 10], 
-                 lista_n_atrs=[3, 6], 
-                 lista_prop_umbral=[1.0])
+# # 1. CRÉDITO 
+# print(X_credito.shape)
+# buscar_y_evaluar("CRÉDITO", X_train_credito, y_train_credito,None,None,X_test_credito, y_test_credito,
+#                  lista_n_arboles=[5, 10], #Probamos con 5 y 10 por ejemplo ya que no es un dataset muy grande X_credito.shape = (650,6) 
+#                  lista_prop_muestras=[1.0], #Al no ser muy grande podemos permitirnos que sea del mismo tamaño que el original
+#                  lista_min_ejemplos_nodo_interior=[5], #5 que es un punto intermedio entre 2, que sería demasiado específico y el ruido afectaria, y tampoco es muy grande ya que el dataset es pequeño
+#                  lista_max_prof=[5, 10], #Probamos con 5, 10 que no son valores muy grandes para evitar sobreajuste
+#                  lista_n_atrs=[3, 6], #Probamos con todos los atributos y con la mitad
+#                  lista_prop_umbral=[1.0]) #Como hay pocos datos podemos evaluar el 100% de los cortes
 
-# 2. ADULT DATASET (Total: 4 combinaciones - Pesado por filas)
-buscar_y_evaluar("ADULT", X_train_adult, y_train_adult, X_valid_adult, y_valid_adult, X_test_adult, y_test_adult,
-                 lista_n_arboles=[5], 
-                 lista_prop_muestras=[0.5], 
-                 lista_min_ejemplos_nodo_interior=[20], 
-                 lista_max_prof=[5, 10], 
-                 lista_n_atrs=[4, 8], 
-                 lista_prop_umbral=[0.1])
+# # 2. ADULT DATASET 
+# print(X_adult.shape)
+# buscar_y_evaluar("ADULT", X_train_adult, y_train_adult,None,None,X_test_adult, y_test_adult,
+#                  lista_n_arboles=[5], #Solo probamos 5, ya que este dataset es mucho más grande y 10 tardará mucho X_adult.shape = (32561, 12)
+#                  lista_prop_muestras=[0.5], # Usamos solo la mitad de los datos en cada árbol para aligerar la memoria y forzar la diversidad en el bosque
+#                  lista_min_ejemplos_nodo_interior=[20], #Al tener tantas filas, subimos el mínimo a 20 para forzar paradas tempranas y no perder tiempo aislando ruido
+#                  lista_max_prof=[5, 10], #Probamos con 5 y 10 para no colapsar la RAM por sobreajuste
+#                  lista_n_atrs=[4, 8], #Hemos investigado y una buena heurística suele ser la raiz cuadrada del numero de características (en nuestro caso 4) y hemos probado tambien el doble de este resultado
+#                  lista_prop_umbral=[0.1]) #Como evaluar los cortes en casi 30.000 filas es lento y costoso, miramos solo el 10% aleatorio.
 
-# 3. IMDB (Total: 2 combinaciones - Pesado por columnas)
-buscar_y_evaluar("IMDB", X_train_imdb, y_train_imdb, X_valid_imdb, y_valid_imdb, X_test_imdb, y_test_imdb,
-                 lista_n_arboles=[10], 
-                 lista_prop_muestras=[0.8], 
-                 lista_min_ejemplos_nodo_interior=[10], 
-                 lista_max_prof=[10], 
-                 lista_n_atrs=[24, 50], 
-                 lista_prop_umbral=[0.1])
+# # 3. IMDB 
+# print(X_train_imdb.shape)
+# print(X_test_imdb.shape)
+# buscar_y_evaluar("IMDB", X_train_imdb, y_train_imdb,None,None, X_test_imdb, y_test_imdb, #X_imdb.shape = 2400,632)
+#                  lista_n_arboles=[15,20], #Probamos con 10, pero los resultados no eran buenos asi que aumentamos
+#                  lista_prop_muestras=[0.8], 
+#                  lista_min_ejemplos_nodo_interior=[5,10], 
+#                  lista_max_prof=[15], # Probamos con 5 y 10, pero los resultados no eran del todo buenos, asi q aumentamos
+#                  lista_n_atrs=[24,100,150], #Probamos con 24 y el doble, pero no eran buenos asi que probamos con mayores
+#                  lista_prop_umbral=[0.1])
 
-# 4. DÍGITOS (Total: 2 combinaciones - Pesado por columnas)
-buscar_y_evaluar("DÍGITOS", X_train_dg, y_train_dg, X_valid_dg, y_valid_dg, X_test_dg, y_test_dg,
-                 lista_n_arboles=[10], 
-                 lista_prop_muestras=[0.8], 
-                 lista_min_ejemplos_nodo_interior=[10], 
-                 lista_max_prof=[10], 
-                 lista_n_atrs=[28, 56], 
-                 lista_prop_umbral=[0.1])
+# # 4. DÍGITOS 
+# print(X_train_dg.shape)
+# buscar_y_evaluar("DÍGITOS", X_train_dg, y_train_dg, X_valid_dg, y_valid_dg, X_test_dg, y_test_dg,
+#                  lista_n_arboles=[10], 
+#                  lista_prop_muestras=[0.8], 
+#                  lista_min_ejemplos_nodo_interior=[10], 
+#                  lista_max_prof=[10], 
+#                  lista_n_atrs=[28, 56, 150], #Igual que en ela anterior subimos mas del doble de la raiz, ya que nos dió mejores resultados
+#                  lista_prop_umbral=[0.1])
 
 
 
 
 
+X_train_iris, X_test_iris, y_train_iris, y_test_iris = particion_entr_prueba(X_iris, y_iris, test=0.2) #No lo piden en ningú enunciado pero para poder ejectutar los siguiente hace falta
 
 # ********************************************************************************
 # ********************************************************************************
@@ -1460,133 +1436,133 @@ buscar_y_evaluar("DÍGITOS", X_train_dg, y_train_dg, X_valid_dg, y_valid_dg, X_t
 
 # *********** DESCOMENTAR A PARTIR DE AQUÍ
 
-# print("************ PRUEBAS EJERCICIO 1:")
-# print("**********************************\n")
-# Xe_votos,Xp_votos,ye_votos,yp_votos=particion_entr_prueba(X_votos,y_votos,test=1/3)
-# print("Partición votos: ",y_votos.shape[0],ye_votos.shape[0],yp_votos.shape[0])
-# print("Proporción original en votos: ",np.unique(y_votos,return_counts=True))
-# print("Estratificación entrenamiento en votos: ",np.unique(ye_votos,return_counts=True))
-# print("Estratificación prueba en votos: ",np.unique(yp_votos,return_counts=True))
-# print("\n")
+print("************ PRUEBAS EJERCICIO 1:")
+print("**********************************\n")
+Xe_votos,Xp_votos,ye_votos,yp_votos=particion_entr_prueba(X_votos,y_votos,test=1/3)
+print("Partición votos: ",y_votos.shape[0],ye_votos.shape[0],yp_votos.shape[0])
+print("Proporción original en votos: ",np.unique(y_votos,return_counts=True))
+print("Estratificación entrenamiento en votos: ",np.unique(ye_votos,return_counts=True))
+print("Estratificación prueba en votos: ",np.unique(yp_votos,return_counts=True))
+print("\n")
 
-# Xev_cancer,Xp_cancer,yev_cancer,yp_cancer=particion_entr_prueba(X_cancer,y_cancer,test=0.2)
-# print("Proporción original en cáncer: ", np.unique(y_cancer,return_counts=True))
-# print("Estratificación entr-val en cáncer: ",np.unique(yev_cancer,return_counts=True))
-# print("Estratificación prueba en cáncer: ",np.unique(yp_cancer,return_counts=True))
-# Xe_cancer,Xv_cancer,ye_cancer,yv_cancer=particion_entr_prueba(Xev_cancer,yev_cancer,test=0.2)
-# print("Estratificación entrenamiento cáncer: ", np.unique(ye_cancer,return_counts=True))
-# print("Estratificación validación cáncer: ",np.unique(yv_cancer,return_counts=True))
-# print("\n")
+Xev_cancer,Xp_cancer,yev_cancer,yp_cancer=particion_entr_prueba(X_cancer,y_cancer,test=0.2)
+print("Proporción original en cáncer: ", np.unique(y_cancer,return_counts=True))
+print("Estratificación entr-val en cáncer: ",np.unique(yev_cancer,return_counts=True))
+print("Estratificación prueba en cáncer: ",np.unique(yp_cancer,return_counts=True))
+Xe_cancer,Xv_cancer,ye_cancer,yv_cancer=particion_entr_prueba(Xev_cancer,yev_cancer,test=0.2)
+print("Estratificación entrenamiento cáncer: ", np.unique(ye_cancer,return_counts=True))
+print("Estratificación validación cáncer: ",np.unique(yv_cancer,return_counts=True))
+print("\n")
 
-# Xe_credito,Xp_credito,ye_credito,yp_credito=particion_entr_prueba(X_credito,y_credito,test=0.4)
-# print("Estratificación entrenamiento crédito: ",np.unique(ye_credito,return_counts=True))
-# print("Estratificación prueba crédito: ",np.unique(yp_credito,return_counts=True))
-# print("\n\n\n")
-
-
-
-
-
-# print("************ PRUEBAS EJERCICIO 2:")
-# print("**********************************\n")
-
-# clf_titanic = ArbolDecision(max_prof=3,min_ejemplos_nodo_interior=5,n_atrs=3)
-# clf_titanic.entrena(X_train_titanic, y_train_titanic)
-# clf_titanic.imprime_arbol(["Pclass", "Mujer", "Edad"],"Partido")
-# rend_train_titanic = rendimiento(clf_titanic,X_train_titanic,y_train_titanic)
-# rend_test_titanic = rendimiento(clf_titanic,X_test_titanic,y_test_titanic)
-# print(f"****** Rendimiento DT titanic train: {rend_train_titanic}")
-# print(f"****** Rendimiento DT titanic test: {rend_test_titanic}\n\n\n\n ")
-
-
-
-
-# clf_votos = ArbolDecision(min_ejemplos_nodo_interior=3,max_prof=5,n_atrs=16)
-# clf_votos.entrena(Xe_votos, ye_votos)
-# nombre_atrs_votos=[f"Votación {i}" for i in range(1,17)]
-# clf_votos.imprime_arbol(nombre_atrs_votos,"Partido")
-# rend_train_votos = rendimiento(clf_votos,Xe_votos,ye_votos)
-# rend_test_votos = rendimiento(clf_votos,Xp_votos,yp_votos)
-# print(f"****** Rendimiento DT votos en train: {rend_train_votos}")
-# print(f"****** Rendimiento DT votos en test:  {rend_test_votos}\n\n\n\n")
-
-
-
-# clf_iris = ArbolDecision(max_prof=3,n_atrs=4)
-# clf_iris.entrena(X_train_iris, y_train_iris)
-# clf_iris.imprime_arbol(["Long. Sépalo", "Anch. Sépalo", "Long. Pétalo", "Anch. Pétalo"],"Clase")
-# rend_train_iris = rendimiento(clf_iris,X_train_iris,y_train_iris)
-# rend_test_iris = rendimiento(clf_iris,X_test_iris,y_test_iris)
-# print(f"********************* Rendimiento DT iris train: {rend_train_iris}")
-# print(f"********************* Rendimiento DT iris test: {rend_test_iris}\n\n\n\n ")
+Xe_credito,Xp_credito,ye_credito,yp_credito=particion_entr_prueba(X_credito,y_credito,test=0.4)
+print("Estratificación entrenamiento crédito: ",np.unique(ye_credito,return_counts=True))
+print("Estratificación prueba crédito: ",np.unique(yp_credito,return_counts=True))
+print("\n\n\n")
 
 
 
 
 
-# clf_cancer = ArbolDecision(min_ejemplos_nodo_interior=3,max_prof=10,n_atrs=15)
-# clf_cancer.entrena(Xev_cancer, yev_cancer)
-# nombre_atrs_cancer=['mean radius', 'mean texture', 'mean perimeter', 'mean area',
-#         'mean smoothness', 'mean compactness', 'mean concavity',
-#         'mean concave points', 'mean symmetry', 'mean fractal dimension',
-#         'radius error', 'texture error', 'perimeter error', 'area error',
-#         'smoothness error', 'compactness error', 'concavity error',
-#         'concave points error', 'symmetry error',
-#         'fractal dimension error', 'worst radius', 'worst texture',
-#         'worst perimeter', 'worst area', 'worst smoothness',
-#         'worst compactness', 'worst concavity', 'worst concave points',
-#         'worst symmetry', 'worst fractal dimension']
-# clf_cancer.imprime_arbol(nombre_atrs_cancer,"Es benigno")
-# rend_train_cancer = rendimiento(clf_cancer,Xev_cancer,yev_cancer)
-# rend_test_cancer = rendimiento(clf_cancer,Xp_cancer,yp_cancer)
-# print(f"***** Rendimiento DT cancer en train: {rend_train_cancer}")
-# print(f"***** Rendimiento DT cancer en test: {rend_test_cancer}\n\n\n")
+print("************ PRUEBAS EJERCICIO 2:")
+print("**********************************\n")
 
-
-
-# print("************ RENDIMIENTOS FINALES RANDOM FOREST")
-# print("************************************************\n")
-
-
-# # ATENCIÓN: EN CADA CASO, INCORPORAR LA MEJOR COMBINACIÓN DE HIPERPARÁMETROS 
-# # QUE SE HA OBTENIDO EN EL PROCESO DE AJUSTE
-
-
-
-# print("==== MEJOR RENDIMIENTO RANDOM FOREST SOBRE IMDB:")
-# RF_IMDB=RandomForest(?????????????????) # ATENCIÓN: incorporar aquí los mejores valoeres de los parámetros tras el ajuste
-# RF_IMDB.entrena(X_train_imdb,y_train_imdb) 
-# print("Rendimiento RF entrenamiento sobre imdb: ",rendimiento(RF_IMDB,X_train_imdb,y_train_imdb))
-# print("Rendimiento RF test sobre imdb: ",rendimiento(RF_IMDB,X_test_imdb,y_test_imdb))
-# print("\n")
+clf_titanic = ArbolDecision(max_prof=3,min_ejemplos_nodo_interior=5,n_atrs=3)
+clf_titanic.entrena(X_train_titanic, y_train_titanic)
+clf_titanic.imprime_arbol(["Pclass", "Mujer", "Edad"],"Partido")
+rend_train_titanic = rendimiento(clf_titanic,X_train_titanic,y_train_titanic)
+rend_test_titanic = rendimiento(clf_titanic,X_test_titanic,y_test_titanic)
+print(f"****** Rendimiento DT titanic train: {rend_train_titanic}")
+print(f"****** Rendimiento DT titanic test: {rend_test_titanic}\n\n\n\n ")
 
 
 
 
-# print("==== MEJOR RENDIMIENTO RANDOM FOREST SOBRE CRÉDITO:")
-
-# RF_CREDITO=RandomForest(??????????????) # ATENCIÓN: incorporar aquí los mejores valores de los parámetros tras el ajuste
-# RF_CREDITO.entrena(X_train_credito,y_train_credito) 
-# print("Rendimiento RF entrenamiento sobre crédito: ",rendimiento(RF_CREDITO,X_train_credito,y_train_credito))
-# print("Rendimiento RF  test sobre crédito: ",rendimiento(RF_CREDITO,X_test_credito,y_test_credito))
-# print("\n")
-
-
-# print("==== MEJOR RENDIMIENTO RF SOBRE ADULT:")
-
-# RF_ADULT=RandomForest(??????????????) # ATENCIÓN: incorporar aquí los mejores valores de los parámetros tras el ajuste
-# RF_ADULT.entrena(X_train_adult,y_train_adult) 
-# print("Rendimiento RF  entrenamiento sobre adult: ",rendimiento(RF_ADULT,X_train_adult,y_train_adult))
-# print("Rendimiento RF  test sobre adult: ",rendimiento(RF_ADULT,X_test_adult,y_test_adult))
-# print("\n")
+clf_votos = ArbolDecision(min_ejemplos_nodo_interior=3,max_prof=5,n_atrs=16)
+clf_votos.entrena(Xe_votos, ye_votos)
+nombre_atrs_votos=[f"Votación {i}" for i in range(1,17)]
+clf_votos.imprime_arbol(nombre_atrs_votos,"Partido")
+rend_train_votos = rendimiento(clf_votos,Xe_votos,ye_votos)
+rend_test_votos = rendimiento(clf_votos,Xp_votos,yp_votos)
+print(f"****** Rendimiento DT votos en train: {rend_train_votos}")
+print(f"****** Rendimiento DT votos en test:  {rend_test_votos}\n\n\n\n")
 
 
-# print("==== MEJOR RENDIMIENTO RL SOBRE DIGITOS:")
-# RF_DG=RandomForest(?????????????) # ATENCIÓN: incorporar aquí los mejores valors de losparámetros tras el ajuste
-# RF_DG.entrena(X_entr_dg,y_entr_dg)
-# print("Rendimiento RF entrenamiento sobre dígitos: ",rendimiento(RF_DG,X_entr_dg,y_entr_dg))
-# print("Rendimiento RF validación sobre dígitos: ",rendimiento(RF_DG,X_val_dg,y_val_dg))
-# print("Rendimiento RF test sobre dígitos: ",rendimiento(RF_DG,X_test_dg,y_test_dg))
+
+clf_iris = ArbolDecision(max_prof=3,n_atrs=4)
+clf_iris.entrena(X_train_iris, y_train_iris)
+clf_iris.imprime_arbol(["Long. Sépalo", "Anch. Sépalo", "Long. Pétalo", "Anch. Pétalo"],"Clase")
+rend_train_iris = rendimiento(clf_iris,X_train_iris,y_train_iris)
+rend_test_iris = rendimiento(clf_iris,X_test_iris,y_test_iris)
+print(f"********************* Rendimiento DT iris train: {rend_train_iris}")
+print(f"********************* Rendimiento DT iris test: {rend_test_iris}\n\n\n\n ")
+
+
+
+
+
+clf_cancer = ArbolDecision(min_ejemplos_nodo_interior=3,max_prof=10,n_atrs=15)
+clf_cancer.entrena(Xev_cancer, yev_cancer)
+nombre_atrs_cancer=['mean radius', 'mean texture', 'mean perimeter', 'mean area',
+        'mean smoothness', 'mean compactness', 'mean concavity',
+        'mean concave points', 'mean symmetry', 'mean fractal dimension',
+        'radius error', 'texture error', 'perimeter error', 'area error',
+        'smoothness error', 'compactness error', 'concavity error',
+        'concave points error', 'symmetry error',
+        'fractal dimension error', 'worst radius', 'worst texture',
+        'worst perimeter', 'worst area', 'worst smoothness',
+        'worst compactness', 'worst concavity', 'worst concave points',
+        'worst symmetry', 'worst fractal dimension']
+clf_cancer.imprime_arbol(nombre_atrs_cancer,"Es benigno")
+rend_train_cancer = rendimiento(clf_cancer,Xev_cancer,yev_cancer)
+rend_test_cancer = rendimiento(clf_cancer,Xp_cancer,yp_cancer)
+print(f"***** Rendimiento DT cancer en train: {rend_train_cancer}")
+print(f"***** Rendimiento DT cancer en test: {rend_test_cancer}\n\n\n")
+
+
+
+print("************ RENDIMIENTOS FINALES RANDOM FOREST")
+print("************************************************\n")
+
+
+# ATENCIÓN: EN CADA CASO, INCORPORAR LA MEJOR COMBINACIÓN DE HIPERPARÁMETROS 
+# QUE SE HA OBTENIDO EN EL PROCESO DE AJUSTE
+
+
+
+print("==== MEJOR RENDIMIENTO RANDOM FOREST SOBRE IMDB:")
+RF_IMDB=RandomForest(n_arboles=20,prop_muestras=0.8,min_ejemplos_nodo_interior=5,max_prof=15,n_atrs=150,prop_umbral=0.1) # ATENCIÓN: incorporar aquí los mejores valoeres de los parámetros tras el ajuste
+RF_IMDB.entrena(X_train_imdb,y_train_imdb) 
+print("Rendimiento RF entrenamiento sobre imdb: ",rendimiento(RF_IMDB,X_train_imdb,y_train_imdb))
+print("Rendimiento RF test sobre imdb: ",rendimiento(RF_IMDB,X_test_imdb,y_test_imdb))
+print("\n")
+
+
+
+
+print("==== MEJOR RENDIMIENTO RANDOM FOREST SOBRE CRÉDITO:")
+
+RF_CREDITO=RandomForest(n_arboles=5,prop_muestras=1.0,min_ejemplos_nodo_interior=5,max_prof=10,n_atrs=6,prop_umbral=1.0) # ATENCIÓN: incorporar aquí los mejores valores de los parámetros tras el ajuste
+RF_CREDITO.entrena(X_train_credito,y_train_credito) 
+print("Rendimiento RF entrenamiento sobre crédito: ",rendimiento(RF_CREDITO,X_train_credito,y_train_credito))
+print("Rendimiento RF  test sobre crédito: ",rendimiento(RF_CREDITO,X_test_credito,y_test_credito))
+print("\n")
+
+
+print("==== MEJOR RENDIMIENTO RF SOBRE ADULT:")
+
+RF_ADULT=RandomForest(n_arboles=5,prop_muestras=0.5,min_ejemplos_nodo_interior=20,max_prof=10,n_atrs=8,prop_umbral=0.1) # ATENCIÓN: incorporar aquí los mejores valores de los parámetros tras el ajuste
+RF_ADULT.entrena(X_train_adult,y_train_adult) 
+print("Rendimiento RF  entrenamiento sobre adult: ",rendimiento(RF_ADULT,X_train_adult,y_train_adult))
+print("Rendimiento RF  test sobre adult: ",rendimiento(RF_ADULT,X_test_adult,y_test_adult))
+print("\n")
+
+
+print("==== MEJOR RENDIMIENTO RL SOBRE DIGITOS:")
+RF_DG=RandomForest(n_arboles=10,prop_muestras=0.8,min_ejemplos_nodo_interior=10,max_prof=10,n_atrs=150,prop_umbral=0.1) # ATENCIÓN: incorporar aquí los mejores valors de losparámetros tras el ajuste
+RF_DG.entrena(X_train_dg,y_train_dg)
+print("Rendimiento RF entrenamiento sobre dígitos: ",rendimiento(RF_DG,X_train_dg,y_train_dg)) #El enunciado nos decía X_train_dg, y_train_dg, X_valid_dg, y_valid_dg, X_test_dg, y_test_dg
+print("Rendimiento RF validación sobre dígitos: ",rendimiento(RF_DG,X_valid_dg,y_valid_dg))
+print("Rendimiento RF test sobre dígitos: ",rendimiento(RF_DG,X_test_dg,y_test_dg))
 
 
 
