@@ -1,4 +1,4 @@
-# Trabajo AIA — Árboles de Decisión, Random Forest y Transfer Learning con CNNs
+# Random-forest-cnn-flowers — Árboles de Decisión, Random Forest y Transfer Learning con CNNs
 
 Trabajo práctico de la asignatura **Ampliación de Inteligencia Artificial** (Grado en Ingeniería Informática, Universidad de Sevilla), realizado en pareja.
 
